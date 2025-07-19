@@ -1,13 +1,17 @@
+import json
 from math import acos, asin, cos, pi, sin
 import os
 import threading
+import time
 from numpy import arccos, arcsin
 import serial
 
+from lidarLib.Lidar import Lidar
 from lidarLib.LidarConfigs import lidarConfigs
 from serial.tools import list_ports
 
 from lidarLib.lidarProtocol import RPLIDAR_MAX_MOTOR_PWM
+from renderLib.renderMachine import initMachine
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 
@@ -38,7 +42,105 @@ def standardQuestion(question:str, yesStr:str = None, noStr:str = None, helpStr:
             print("Sorry ", response, " is not a valid response. Try y, n", (", or help. " if helpStr else "."), sep="")
 
 
+def handleQuickstartProjects(path:str, configFilePath:str):
+    projects=[]
+    for item in os.listdir(path):
 
+        if os.path.isdir(item):
+            continue
+
+        if ".json" not in item:
+            continue
+
+        with open(item, 'r') as file:
+            data:dict = json.load(file)
+            if data.get("type", "lol")=="projectConfig":
+                projects.append(item)
+
+    for project in projects:
+        if standardQuestion(
+            "Lidar project detected on at " + project + ". Would you like to add this config file to that project?",
+            helpStr= "Project config files are used to set up systems will multiple lidar objects like the FRCQuickstartLidarProject included in this library."
+        ):
+            with open(project, 'w') as file:
+                data:dict = json.load(file)
+                if "lidarConfigs" in data:
+                    data["lidarConfigs"].append(configFilePath)
+                else:
+                    data["lidarConfigs"] = [configFilePath]
+                
+                json.dump(data, project, indent=4)    
+
+    if len(projects)==0:
+        if standardQuestion(
+            "No lidar project file was found. Would you like to make one?",
+            helpStr= "Project config files are used to set up systems will multiple lidar objects like the FRCQuickstartLidarProject included in this file."
+        ):
+            while True:
+                projectFileName = input("Please give a filename for the project(Without the path)")
+                if "/" in projectFileName or ".json" not in projectFileName:
+                    print("Sorry", projectFileName, "is not a valid filename. Please make sure not to include a path and remember to add the .json")
+                    continue
+
+                break
+            
+            while True:
+                teamNumber = input("Please enter an FRC team number if you are in an FRC team. If you would like to skip dont enter anything").strip().lower()
+                if teamNumber=='':
+                    if standardQuestion("Are you sure you would like to proceed without a team number. Without one the builtin FRCQuickstartLidarProject will not be able to function"):
+                        teamNumber=False
+                        break
+
+                    else:continue
+
+                try:
+                    int(teamNumber)
+                    break
+                except:
+                    print("Sorry", teamNumber, "could not be turned into an integer")
+
+
+            with open(project, 'w') as file:
+                data = {
+                    "lidarConfigs" : [configFilePath],
+                    "type" : "projectConfig"
+                }
+                if teamNumber:
+                    data["teamNumber"] = teamNumber
+                
+                json.dump(data, project, indent=4)    
+
+def demoRun(configPath:str):
+    configs:lidarConfigs = lidarConfigs.configsFromJson(configPath)
+    lidar:Lidar = Lidar(configs)
+
+    if not configs.autoConnect:
+        lidar.connect()
+
+
+    print(lidar.getSampleRate())
+    print(lidar.getScanModeTypical())
+    print(str(lidar.getScanModes()))
+    for item in lidar.getScanModes():
+        print(item)
+
+    if not lidarConfigs.autoStart:
+        if lidarConfigs.mode=="normal":
+            lidar.startScan()
+        else:
+            lidar.startScanExpress()
+
+
+    time.sleep(1)
+
+    renderer, pipe = initMachine()
+    
+    while pipe.isConnected():
+        pipe.send(lidar.getLastMap())
+        time.sleep(0.1)
+
+    
+    lidar.disconnect()
 
 
 
@@ -83,17 +185,29 @@ class lidarConfigurationTool:
             #debug 
             self.getDebug()
 
-        #path
+            #defaultMode TODO
 
+        #path
+        self.getPath()
 
         #name
-
+        self.getName()
+        
         #file write
-
-        #test
-
+        self.configFile.writeToJson(os.path.join(self.path, self.filename))
 
         #quickstart tool??????
+        handleQuickstartProjects(self.path, os.path.join(self.path, self.filename))
+
+        #test
+        if standardQuestion(
+            "The lidar lib would now like to run a scan(with a render) to make sure everything worked correctly. " +
+            "This will involve connecting to and scanning with the lidar. Is this ok?"):
+            demoRun()
+
+        print("Congratulations on setting up a lidar module!!!!")
+
+
 
     def opening(self):
         standardQuestion(
@@ -501,10 +615,53 @@ class lidarConfigurationTool:
                 "However the volume of text can slow down the library slightly and be confusing so we recommend turning it off when it isn't actively being used (including when on robots)."
         )
 
+    def getPath(self):
+        path=None
+        while True:
+            path = input("Please enter the path to the directory where you would like to store to config file(do not include the config file's name itself)")
+            if not os.path.exists(path):
+                print("Sorry", path, "does not exist.")
+                continue
+            if os.path.isfile(path):
+                print("Sorry that path :", path, "appears to be a file and not a directory")
+
+            if standardQuestion(
+                "Are you sure you want to make the config in the directory " + path + "?",
+                helpStr= 
+                    "This path is the directory/folder in which the config file will be placed. " +
+                    "You do not need to include the file name of the config file, we will get there in a bit. " +
+                    "While you can include the path in relation to the location this script was run from we recommend giving the entire path from root if you are having issues."
+            ):
+                self.path=path
+                return
+
+    def getName(self):
+
+        while True:
+            name = input(
+                "Please enter a name for the lidar. "+
+                "This should be a unique from all other lidar names and  we recommend making it descriptive of the lidar (aka \"front left lidar\" not \"bob\")"
+            ).strip()
+            if name=='':
+                print("Please provide a name")
+                continue
+
+            if standardQuestion("This will set the lidars name to " + name + ". Does this look good?"):
+                break
+
+        self.configFile.name=name
+
+        if not standardQuestion("Would you like to name the config file " + name + ".json?"):
+            while True:
+                fileName = input("Please give a filename(Without the path)")
+                if "/" in fileName or ".json" not in fileName:
+                    print("Sorry", fileName, "is not a valid filename. Please make sure not to include a path and remember to add the .json")
+                    continue
+
+                self.filename=fileName
+                break
 
 
-
-    
 
 class InputBox:
 
