@@ -6,6 +6,7 @@ import time
 from numpy import arccos, arcsin
 import serial
 
+from lidarLib.translation import translation
 from lidarLib.Lidar import Lidar
 from lidarLib.LidarConfigs import lidarConfigs
 from serial.tools import list_ports
@@ -23,10 +24,10 @@ def getInput(toPrint:str = None, shouldStrip:bool = True, shouldLower:bool = Tru
     return response
 
 def standardQuestion(question:str, yesStr:str = None, noStr:str = None, helpStr:str = None, invalidStr:str = None, addAnswerString:bool=True)->bool:
-    response = getInput(question+(" (y/n" + ("/help)" if helpStr else")")) if addAnswerString else "")
 
     while True:
-        response = getInput(question)
+        response = getInput(question+((" (y/n" + ("/help)" if helpStr else")")) if addAnswerString else "") + "\n")
+
 
         if response=='y':
             if yesStr: print(yesStr) 
@@ -52,24 +53,29 @@ def handleQuickstartProjects(path:str, configFilePath:str):
         if ".json" not in item:
             continue
 
-        with open(item, 'r') as file:
-            data:dict = json.load(file)
-            if data.get("type", "lol")=="projectConfig":
-                projects.append(item)
+        try:
+            with open(item, 'r') as file:
+                data:dict = json.load(file)
+                if data.get("type", "lol")=="projectConfig":
+                    projects.append(item)
+        except:
+            pass
 
     for project in projects:
         if standardQuestion(
             "Lidar project detected on at " + project + ". Would you like to add this config file to that project?",
             helpStr= "Project config files are used to set up systems will multiple lidar objects like the FRCQuickstartLidarProject included in this library."
         ):
-            with open(project, 'w') as file:
+            with open(project, 'r+') as file:
                 data:dict = json.load(file)
+                file.seek(0)
+                file.truncate()
                 if "lidarConfigs" in data:
                     data["lidarConfigs"].append(configFilePath)
                 else:
                     data["lidarConfigs"] = [configFilePath]
                 
-                json.dump(data, project, indent=4)    
+                json.dump(data, file, indent=4)    
 
     if len(projects)==0:
         if standardQuestion(
@@ -100,7 +106,7 @@ def handleQuickstartProjects(path:str, configFilePath:str):
                     print("Sorry", teamNumber, "could not be turned into an integer")
 
 
-            with open(project, 'w') as file:
+            with open(projectFileName, 'w') as file:
                 data = {
                     "lidarConfigs" : [configFilePath],
                     "type" : "projectConfig"
@@ -108,7 +114,7 @@ def handleQuickstartProjects(path:str, configFilePath:str):
                 if teamNumber:
                     data["teamNumber"] = teamNumber
                 
-                json.dump(data, project, indent=4)    
+                json.dump(data, file, indent=4)    
 
 def demoRun(configPath:str):
     configs:lidarConfigs = lidarConfigs.configsFromJson(configPath)
@@ -117,15 +123,15 @@ def demoRun(configPath:str):
     if not configs.autoConnect:
         lidar.connect()
 
-
+    configs.printConfigs()
     print(lidar.getSampleRate())
     print(lidar.getScanModeTypical())
     print(str(lidar.getScanModes()))
     for item in lidar.getScanModes():
         print(item)
 
-    if not lidarConfigs.autoStart:
-        if lidarConfigs.mode=="normal":
+    if not configs.autoStart:
+        if configs.mode=="normal":
             lidar.startScan()
         else:
             lidar.startScanExpress()
@@ -147,23 +153,23 @@ def demoRun(configPath:str):
 class lidarConfigurationTool:
 
     def __init__(self):
-        # self.defaults = lidarConfigs.defaultConfigs
-        # self.configFile:lidarConfigs=None
-        self.configFile = lidarConfigs(port="lol")
+        self.defaults = lidarConfigs.defaultConfigs
+        self.configFile:lidarConfigs=None
+        # self.configFile = lidarConfigs(port="lol")
 
 
         # #opening
-        # self.opening()
+        self.opening()
         
 
-        # self.verboseCheck()
+        self.verboseCheck()
 
         # #find lidar
-        # self.findLidar()
+        self.findLidar()
 
 
         # #baudrate
-        # self.findBaudRate()
+        self.findBaudRate()
 
         #get trans
         self.getTransOrDeadband(True)
@@ -203,7 +209,7 @@ class lidarConfigurationTool:
         if standardQuestion(
             "The lidar lib would now like to run a scan(with a render) to make sure everything worked correctly. " +
             "This will involve connecting to and scanning with the lidar. Is this ok?"):
-            demoRun()
+            demoRun(os.path.join(self.path, self.filename))
 
         print("Congratulations on setting up a lidar module!!!!")
 
@@ -229,12 +235,10 @@ class lidarConfigurationTool:
     
 
 
-        portFound=None
         for bus in list_ports.comports():
             if bus.vid == self.defaults["vendorID"]:
                 if self.configFile==None:
-                    self.configFile = lidarConfigs(vendorID=bus.vid, productID=bus.pid, serialNumber=bus.serial_number)
-                    self.portFound==bus.product
+                    self.configFile = lidarConfigs(vendorID=(bus.vid), productID=(bus.pid), serialNumber=bus.serial_number)
                 else:
                     print("Detected multiple lidar like devices. Please make sure that there is only one lidar plugged in. If the issue continues please try on a different device.")
                     
@@ -382,7 +386,7 @@ class lidarConfigurationTool:
                         baudrate=None
                 
                 if not standardQuestion(
-                    "This will set the baudrate to " + baudrate + ". Does this look correct?",
+                    "This will set the baudrate to " + str(baudrate) + ". Does this look correct?",
                     helpStr= 
                         "Baudrate tells the system how fast the lidar will send packages. " +
                         "If your lidar model has a 5pin to usb adapter it may have a switch on the side to change Baudrate with the numbers written on it. " +
@@ -405,6 +409,9 @@ class lidarConfigurationTool:
         for bus in list_ports.comports():
             if bus.serial_number == self.configFile.serialNumber and bus.vid == self.configFile.vendorID and bus.pid == self.configFile.productID:
                 port = bus.device
+        
+        if not port:
+            raise ValueError("Could not find port associated with lidar")
 
         ser = serial.Serial(port)
         ser.timeout = 0.5
@@ -502,7 +509,7 @@ class lidarConfigurationTool:
                 x, y, r = xInputBox.getText(), yInputBox.getText(), rInputBox.getText()%360
             else:
                 deadbandStart, deadbandEnd = deadbandStartBox.getText()%360, deadbandEndBox.getText()%360
-                x, y, r = self.configFile.x, self.configFile.y, self.configFile.r
+                x, y, r = self.configFile.localTrans.x, self.configFile.localTrans.y, self.configFile.localTrans.r
 
             gameDisplay.fill(white)
             gameDisplay.blit(robotImg, ((displayWidth-332)/2, (displayHeight-332)/2))
@@ -549,24 +556,20 @@ class lidarConfigurationTool:
         pygame.quit()
 
         if isTrans:
-            if not standardQuestion("This will set the lidar offset to x(meters) : " + x + " y(meters) : " + y + " rotation(degrees) :" + r + "?"):
+            if not standardQuestion("This will set the lidar offset to x(meters) : " + str(x) + " y(meters) : " + str(y) + " rotation(degrees) :" + str(r) + "?"):
                 self.getTransOrDeadband(True)
                 return
             else:
-                self.configFile.x=x
-                self.configFile.y=y
-                self.configFile.r=r
+                self.configFile.localTrans = translation.fromCart(x, y, r)
            
 
         
         else:
-            if not standardQuestion("This will set the lidar deadband to the range from " + deadbandStart +" to " + deadbandEnd + "?"):
+            if not standardQuestion("This will set the lidar deadband to the range from " + str(deadbandStart) + " to " + str(deadbandEnd) + "?"):
                 self.getTransOrDeadband(False)
                 return
             else:
-                self.configFile.x=x
-                self.configFile.y=y
-                self.configFile.r=r
+                self.configFile.deadband = (deadbandStart, deadbandEnd)
 
 
 
@@ -624,6 +627,7 @@ class lidarConfigurationTool:
                 continue
             if os.path.isfile(path):
                 print("Sorry that path :", path, "appears to be a file and not a directory")
+                continue
 
             if standardQuestion(
                 "Are you sure you want to make the config in the directory " + path + "?",
@@ -660,6 +664,8 @@ class lidarConfigurationTool:
 
                 self.filename=fileName
                 break
+        else:
+            self.filename=name+".json"
 
 
 

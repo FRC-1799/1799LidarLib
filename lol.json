@@ -1,0 +1,14 @@
+{
+    "localTrans": {
+        "x": 0.0,
+        "y": 0.0,
+        "rotation": 0
+    },
+    "deadband": [
+        0,
+        0
+    ],
+    "serialNumber": "ee588bb32e863a468fd5dc8a32645891",
+    "name": "testFile",
+    "type": "lidarConfig"
+}

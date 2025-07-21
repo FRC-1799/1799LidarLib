@@ -1,8 +1,9 @@
 {
-    "lidarConfigs" : [
+    "lidarConfigs": [
         "/home/lidar/Documents/github/LidarDetection/lidar0.json",
-        "/home/lidar/Documents/github/LidarDetection/lidar1.json"
+        "/home/lidar/Documents/github/LidarDetection/lidar1.json",
+        "/home/lidar/Documents/github/LidarDetection/testLidar.json"
     ],
-    "teamNumber" : 1799,
-    "type" : "projectConfig"
+    "teamNumber": 1799,
+    "type": "projectConfig"
 }
