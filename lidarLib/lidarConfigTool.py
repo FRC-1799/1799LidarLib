@@ -492,6 +492,7 @@ class lidarConfigurationTool:
                 if event.type == pygame.QUIT:
                     shouldContinue = False
 
+
                 if isTrans:
                     for box in transInputBoxes:
                         box.handleEvent(event)
@@ -502,6 +503,17 @@ class lidarConfigurationTool:
 
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                     shouldContinue=False
+
+                    if isTrans:
+                        for box in transInputBoxes:
+                            if not box.hasValidText:
+                                shouldContinue=True
+                                break
+                    else:
+                        for box in deadInputBoxes:
+                            if not box.hasValidText:
+                                shouldContinue=True
+                                break
                     
             for box in transInputBoxes:
                 box.update()
