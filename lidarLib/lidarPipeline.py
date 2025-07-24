@@ -13,7 +13,7 @@ from lidarLib.translation import translation
 class lidarPipeline:
     """
         Class that encapsulates pipe connections between a user and a lidar manager
-        This class has all of the user side functions present in a standard lidar object and can therefor be used mostly interchangeably.
+        This class has all of the user side functions present in a standard lidar object and can therefore be used mostly interchangeably.
         However be aware that due to the very different internals of the two classes they may behave differently in certain circumstances. 
     """
     def __init__(self, pipe:Connection, host:Process=None):
