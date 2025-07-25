@@ -3,7 +3,7 @@ from math import acos, asin, cos, pi, sin
 import os
 import threading
 import time
-from numpy import arccos, arcsin
+
 import serial
 
 from lidarLib.translation import translation
@@ -18,7 +18,7 @@ import pygame
 
 
 def getInput(toPrint:str = None, shouldStrip:bool = True, shouldLower:bool = True):
-    response = input(toPrint)
+    response = input(toPrint + "\n")
     if shouldStrip: response=response.strip()
     if shouldLower: response=response.lower()
     return response
@@ -26,21 +26,24 @@ def getInput(toPrint:str = None, shouldStrip:bool = True, shouldLower:bool = Tru
 def standardQuestion(question:str, yesStr:str = None, noStr:str = None, helpStr:str = None, invalidStr:str = None, addAnswerString:bool=True)->bool:
 
     while True:
-        response = getInput(question+((" (y/n" + ("/help)" if helpStr else")")) if addAnswerString else "") + "\n")
-
+        response = getInput(question+((" (y/n" + ("/help)" if helpStr else")")) if addAnswerString else ""))
 
         if response=='y':
             if yesStr: print(yesStr) 
+            print()
             return True
         elif response == 'n':
             if noStr: print(noStr)
+            print()
             return False
         elif response == 'help':
             if helpStr: print(helpStr)
             else: print("Sorry help is not currently available on this question")
+            print()
+
         else:
             
-            print("Sorry ", response, " is not a valid response. Try y, n", (", or help. " if helpStr else "."), sep="")
+            print("Sorry ", response, " is not a valid response. Try y, n", (", or help. " if helpStr else "."), "\n", sep="")
 
 
 def handleQuickstartProjects(path:str, configFilePath:str):
@@ -254,7 +257,7 @@ class lidarConfigurationTool:
                     return
                 
         if self.verbose:
-            print("Lidar found with vendorID:", self.configFile.vendorID, " productID:", self.configFile.productID, "serialPort:", self.configFile.serialNumber,)
+            print("Lidar found with vendorID:", hex(self.configFile.vendorID), " productID:", hex(self.configFile.productID), "serialPort:", self.configFile.serialNumber)
             if not standardQuestion("Does this look right?"):
                 self.enterSerialValuesManual()
                 if not self.configFile:
@@ -268,7 +271,6 @@ class lidarConfigurationTool:
 
 
     def enterSerialValuesManual(self):
-        shouldQuit = getInput("Would you like to continue setting the productID, vendorID, and serial number of the lidar manually (y/n)")
         if not standardQuestion(
                 "Would you like to continue setting the productID, vendorID, and serial number of the lidar manually?",
                 helpStr=
@@ -278,68 +280,65 @@ class lidarConfigurationTool:
         
 
         vid = None
-        while vid:
+        while True:
             vid = getInput("please enter the vendor ID in format 0xXXXX where X (but not x) is replaced with a hexadecimal number or press enter to use default")
+            print()
             
             if len(vid)==0:
                 vid=self.defaults["vendorID"]
-            
-            try:
-                vid = hex(int(vid, 16))
 
-            except:
-                print("Vendor ID", vid, "Could not be converted into a hexadecimal integer. Likely it was formatted incorrectly")
-                self.enterSerialValuesManual()
-                vid=None
-                continue
-            
+            else:    
+                try:
+                    vid = int(vid, 16)
+
+                except:
+                    print("Vendor ID", vid, "Could not be converted into a hexadecimal integer. Likely it was formatted incorrectly\n")
+                    continue
+
             if vid<0 or vid>0xffff:
                 print("Vendor ID", vid, "Was not in valid range 0x0000 to 0xffff")
-                vid=None
                 continue
 
 
-            if not standardQuestion("VendorID will be set to " + vid + ". Does this look correct?"):
-                vid=None
-
-
+            if standardQuestion("VendorID will be set to " + hex(vid) + ". Does this look correct?"):
+                break  
+        
+        
         pid = None
-        while pid:
+        while True:
             pid = getInput("please enter the product ID in format 0xXXXX where X (but not x) is replaced with a hexadecimal number.")
+            print()
 
             try:
-                pid = hex(int(pid, 16))
+                pid = int(pid, 16)
 
             except:
-                print("Product ID", pid, "Could not be converted into a hexadecimal integer. Likely it was formatted incorrectly")
+                print("Product ID", pid, "Could not be converted into a hexadecimal integer. Likely it was formatted incorrectly\n")
                 self.enterSerialValuesManual()
-                pid=None
                 continue
             
             if pid<0 or pid>0xffff:
                 print("Product ID", pid, "Was not in valid range 0x0000 to 0xffff")
-                pid=None
                 continue
 
-            if not standardQuestion("ProductID will be set to " + pid + ". Does this look correct?"):
-                vid=None
-
+            if standardQuestion("ProductID will be set to " + hex(pid) + ". Does this look correct?"):
+                break
 
 
         serialNumber = None
-        while serialNumber:
+        while True:
             serialNumber = getInput("please enter the serial number as a string (Make sure NOT to include a 0x at the beginning).")
+            print()
 
-            isCorrect = getInput("Product ID will be set to", serialNumber, ". Does this look correct?(y/n)")
-            if isCorrect!='y':
-                serialNumber=None
 
+            if standardQuestion("Product ID will be set to " + serialNumber + ". Does this look correct?"):
+                break
 
         
         if not standardQuestion(
-            "This will set the Vendor ID to" + vid +
-            ", the product id to" + pid +
-            ", and the serial number to" + serialNumber +
+            "This will set the Vendor ID to " + hex(vid) +
+            ", the product id to " + hex(pid) +
+            ", and the serial number to " + serialNumber +
             ". Does this look correct?"):
             if standardQuestion("Are you sure? saying yes will restart the manual process from the beginning."):
                 self.enterSerialValuesManual()
@@ -349,7 +348,7 @@ class lidarConfigurationTool:
 
 
         self.configFile = lidarConfigs(vendorID=vid, productID=pid, serialNumber=serialNumber)
-        print("Values set!!!")
+        print("Values set!!!\n")
 
 
 
@@ -359,11 +358,11 @@ class lidarConfigurationTool:
             if not standardQuestion(
             
                 question=
-                    "The config tool could not automatically determine the baudrate of connected lidar. " +
+                    "The config tool could not automatically determine the baudrate of connected lidar. "
                     "Would you like to manually enter the baudrate (otherwise the system will try again)?",
                 helpStr= 
                     "Baudrate tells the system how fast the lidar will send packages. " +
-                    "If your lidar model has a 5pin to usb adapter it may have a switch on the side to change Baudrate with the numbers written on it. " +
+                    "If your lidar model has a 5pin to usb adapter it may have a switch on the side to change Baudrate with the numbers written on it.\n" +
                     "Otherwise check the specific models documentation to find the baudrate. "
             ): self.findBaudRate()
             
@@ -374,7 +373,7 @@ class lidarConfigurationTool:
                 if baudrate == "help":
                     print(
                         "Baudrate tells the system how fast the lidar will send packages.", 
-                        "If your lidar model has a 5pin to usb adapter it may have a switch on the side to change Baudrate with the numbers written on it.",
+                        "If your lidar model has a 5pin to usb adapter it may have a switch on the side to change Baudrate with the numbers written on it.\n" +
                         "Otherwise check the specific models documentation to find the baudrate."
                     )
                     baudrate=None
@@ -384,12 +383,12 @@ class lidarConfigurationTool:
                     except:
                         print("Could not convert", baudrate, "to a decimal integer. Please try again")
                         baudrate=None
-                
-                if not standardQuestion(
+                print()
+                if baudrate and not standardQuestion(
                     "This will set the baudrate to " + str(baudrate) + ". Does this look correct?",
                     helpStr= 
-                        "Baudrate tells the system how fast the lidar will send packages. " +
-                        "If your lidar model has a 5pin to usb adapter it may have a switch on the side to change Baudrate with the numbers written on it. " +
+                        "Baudrate tells the system how fast the lidar will send packages. "
+                        "If your lidar model has a 5pin to usb adapter it may have a switch on the side to change Baudrate with the numbers written on it.\n" +
                         "Otherwise check the specific models documentation to find the baudrate. "
                     ):baudrate = None
 
@@ -431,20 +430,21 @@ class lidarConfigurationTool:
         if isTrans:
             print(
                 "Next you will need to enter the offset of the lidar in relation to the robot.",
-                "This concept can be confusing so we have provided a (slightly scuffed) GUI.\n",
+                "This concept can be confusing so we have provided a (slightly scuffed) GUI.\n"
                 "All numbers should be in meters accept for the rotation which should be provided in degrees.", 
-                "As a reminder FRC coordinates are jank and so X and Y may be swapped from what you are used to.", 
-                "if you do not wish to use this feature simply do not provide any values",
+                "As a reminder FRC coordinates are jank and so X and Y may be swapped from what you are used to.\n" 
+                "if you do not wish to use this feature simply do not provide any values\n"
                 "Once you have entered all coordinates press enter to continue."
             )
         else:
             print(
                 "Next you will need to enter the deadband of the lidar in relation to the robot.",
-                "This is a range of degree values that will be thrown out by the lidar. This is useful to block out areas occupied by your robot."
-                "This concept can be confusing so we have provided another (slightly scuffed) GUI. The grayed out angles are the ones that will be discarded.",
-                "All numbers should be in degrees.", 
+                "This is a range of degree values that will be thrown out by the lidar.\n"
+                "This is useful to block out areas occupied by your robot.",   
+                "This concept can be confusing so we have provided another (slightly scuffed) GUI.\nThe grayed out angles are the ones that will be discarded.",
+                "All numbers should be in degrees." 
                 "As a reminder FRC coordinates are jank and so X and Y may be swapped from what you are used to.", 
-                "If you do not wish to use this feature simply do not provide any values.",
+                "If you do not wish to use this feature simply do not provide any values.\n"
                 "Once you have entered the correct deadband press enter to continue."
             )
         input()
@@ -658,9 +658,17 @@ class lidarConfigurationTool:
                 "Please enter a name for the lidar. "+
                 "This should be a unique from all other lidar names and  we recommend making it descriptive of the lidar (aka \"front left lidar\" not \"bob\")"
             ).strip()
+            print()
             if name=='':
                 print("Please provide a name")
                 continue
+            if ".json" in name:
+                if not standardQuestion(
+                    ".json was included in the lidar name. "
+                    "The lidars name is different from the name of its config file(although they should be similar) so this .json is likely a mistake.\n"
+                    "Are you sure you would like to have .json in the name?"):
+                    continue
+                    
 
             if standardQuestion("This will set the lidars name to " + name + ". Does this look good?"):
                 break
@@ -678,6 +686,8 @@ class lidarConfigurationTool:
                 break
         else:
             self.filename=name+".json"
+
+        print()
 
 
 

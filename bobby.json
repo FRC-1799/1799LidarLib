@@ -1,0 +1,16 @@
+{
+    "localTrans": {
+        "x": 0.0,
+        "y": 0.0,
+        "rotation": 0
+    },
+    "deadband": [
+        0,
+        0
+    ],
+    "autoStart": true,
+    "autoConnect": false,
+    "serialNumber": "ee588bb32e863a468fd5dc8a32645891",
+    "name": "bob",
+    "type": "lidarConfig"
+}
