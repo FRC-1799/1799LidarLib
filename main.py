@@ -13,13 +13,13 @@ from functools import partial
 import pickle
 import time
 from lidarLib.translation import translation
-from publisher import publisher
 from renderLib.renderMachine import initMachine
 from lidarLib import lidarManager
 from lidarLib.lidarPipeline import lidarPipeline
 from lidarHitboxingMap import lidarHitboxMap
 import multiexit
 from lidarLib.LidarConfigs import lidarConfigs
+from lidarLib.FRCLidarPublisher import publisher
 
 
 
@@ -64,7 +64,7 @@ def session(ntPublisher:publisher, shouldLiveSupplier:callable):
 
 def main():
     multiexit.install()
-    ntPublisher = publisher()
+    ntPublisher = publisher(teamNumber=1799)
     thread = threading.Thread(target=session, daemon=True, kwargs={"ntPublisher":ntPublisher, "shouldLiveSupplier":ntPublisher.isConnected})
     
     
@@ -72,13 +72,13 @@ def main():
 
     while True:
         print("while cycle")
-        if (ntPublisher.isConnected()or constants.overrideNTConnectionRequirement) and not thread.is_alive():
+        if (ntPublisher.isConnected()) and not thread.is_alive():
             thread = threading.Thread(target=session, daemon=True, kwargs={"ntPublisher":ntPublisher, "shouldLiveSupplier":ntPublisher.isConnected})
             print(ntPublisher.isConnected(), thread.is_alive())
             thread.start()
             
 
-        if (not ntPublisher.isConnected() and not constants.overrideNTConnectionRequirement) and thread.is_alive():
+        if (not ntPublisher.isConnected()) and thread.is_alive():
             thread.join(5)
             if thread.is_alive:
                 print("Lidar thread did not properly terminate")
