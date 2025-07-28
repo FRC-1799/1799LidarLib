@@ -23,10 +23,6 @@ class lidarConfigs:
         "autoStart" : False,
         "autoConnect" : True,
         "defaultSpeed" : lidarProtocol.RPLIDAR_DEFAULT_MOTOR_PWM,
-        "reportData" : True,
-        "reportSampleRate" : True,
-        "reportCombinedOffset" : True,
-        "reportScanModes" : True,
         "vendorID" : 0x10c4,
         "productID" : 0xea60,
         "serialNumber" : None, 
@@ -38,7 +34,7 @@ class lidarConfigs:
 
     def __init__(
                     self, 
-                    port:string = defaultConfigs["port"],
+                    port:str = defaultConfigs["port"],
                     vendorID = defaultConfigs["vendorID"],
                     productID = defaultConfigs["productID"],
                     serialNumber = defaultConfigs["serialNumber"],
@@ -50,14 +46,11 @@ class lidarConfigs:
                     debugMode=defaultConfigs["debugMode"],
                     isStop=defaultConfigs["isStop"], 
                     autoStart=defaultConfigs["autoStart"], 
-                    autoConnect=defaultConfigs["autoStart"], 
+                    autoConnect=defaultConfigs["autoConnect"], 
                     defaultSpeed=defaultConfigs["defaultSpeed"],
-                    reportData=defaultConfigs["reportData"], 
-                    reportSampleRate=defaultConfigs["reportSampleRate"], 
-                    reportScanModes=defaultConfigs["reportScanModes"], 
-                    reportCombinedOffset=defaultConfigs["reportScanModes"],
                     name = defaultConfigs["name"]
             ):
+
 
         self.port=port
         self.localTrans = localTrans
@@ -68,10 +61,7 @@ class lidarConfigs:
         self.isStop=isStop
         self.autoStart=autoStart
         self.defaultSpeed = defaultSpeed
-        self.reportData = reportData
-        self.reportSampleRate=reportSampleRate
-        self.reportScanModes=reportScanModes
-        self.reportCombinedOffset = reportCombinedOffset
+
         self.mode=mode
         self.autoConnect=autoConnect
         self.deadband = deadband
@@ -98,10 +88,6 @@ class lidarConfigs:
             "\nautoStart:", self.autoStart,
             "\nautoConnect:", self.autoConnect,
             "\ndefualtSpeed:", self.defaultSpeed,
-            "\nreportData:", self.reportData,
-            "\nreportSampleRate:", self.reportSampleRate,
-            "\nreportScanModes:", self.reportScanModes,
-            "\nreportCombinedOffset:", self.reportCombinedOffset  ,
             "\nmode:", self.mode,         
             "\nvendorID: ", self.vendorID,
             "\nproductID: ", self.productID,
@@ -110,7 +96,7 @@ class lidarConfigs:
         )
 
     @classmethod
-    def configsFromJson(cls:"lidarConfigs", path:string)->"lidarConfigs":
+    def configsFromJson(cls:"lidarConfigs", path:str)->"lidarConfigs":
         try:
             with open(path, 'r') as file:
                 data:dict = json.load(file)
@@ -135,10 +121,6 @@ class lidarConfigs:
                     autoStart = data.get("autoStart", lidarConfigs.defaultConfigs["autoStart"]),
                     autoConnect = data.get("autoConnect", lidarConfigs.defaultConfigs["autoConnect"]),
                     defaultSpeed = data.get("defaultSpeed", lidarConfigs.defaultConfigs["defaultSpeed"]),
-                    reportData = data.get("reportData", lidarConfigs.defaultConfigs["reportData"]),
-                    reportSampleRate = data.get("reportSampleRate", lidarConfigs.defaultConfigs["reportSampleRate"]),
-                    reportScanModes = data.get("reportScanModes", lidarConfigs.defaultConfigs["reportScanModes"]),
-                    reportCombinedOffset = data.get("reportCombinedOffset", lidarConfigs.defaultConfigs["reportCombinedOffset"]),
                     name = data.get("name", lidarConfigs.defaultConfigs["name"])
 
                 )
@@ -152,7 +134,7 @@ class lidarConfigs:
             print(f"Error: Invalid JSON format in file: [path]")
             return None
 
-    def writeToJson(self, path:string):
+    def writeToJson(self, path:str):
         try:
             data = {
                 
@@ -171,10 +153,7 @@ class lidarConfigs:
                 "autoStart" : self.autoStart,
                 "autoConnect" : self.autoConnect,
                 "defaultSpeed" : self.defaultSpeed,
-                "reportData" : self.reportData,
-                "reportSampleRate" : self.reportSampleRate,
-                "reportScanModes" : self.reportScanModes,
-                "reportCombinedOffset" : self.reportCombinedOffset,
+
                 "serialNumber" : self.serialNumber,
                 "productID" : self.productID,
                 "vendorID" : self.vendorID,

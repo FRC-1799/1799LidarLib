@@ -7,6 +7,8 @@
         "rotation": 0
     },
     "autoConnect": true,
+    "autoStart":true,
     "debugMode" : true,
-    "name" : "lidar0"
+    "name" : "lidar0",
+    "mode" : "express" 
 }

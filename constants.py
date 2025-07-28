@@ -32,4 +32,4 @@ class constants:
         [True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True]
     ]
     robotIsReal=False
-    overrideNTConnectionRequirment=False
+    overrideNTConnectionRequirement=False

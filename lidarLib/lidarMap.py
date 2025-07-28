@@ -1,4 +1,4 @@
-from lidarLib import lidarMeasurment
+from lidarLib import lidarMeasurement
 import lidarLib.Lidar
 from lidarLib.translation import translation
 
@@ -8,12 +8,12 @@ class lidarMap:
     """
     def __init__(self, hostLidar:"Lidar.Lidar", mapID=0, deadband=None, sensorThetaOffset=0):
         """
-            Initalizes a lidarMap scan
-            host lidar should be set to the lidar object responcable for populating the map. 
-            This value is only used if the point map is still being updated and so is unnessisary if the map is done being filled.
-            MapId is a id for the map and should be uniqe. however if the map does not need to be identifyed the feild can be left blank
+            Initializes a lidarMap scan
+            host lidar should be set to the lidar object responsible for populating the map. 
+            This value is only used if the point map is still being updated and so is unnecessary if the map is done being filled.
+            MapId is a id for the map and should be unique. however if the map does not need to be identified the field can be left blank
             Deadband is a range of angles that should be dropped. the proper format is a list of 2 integers in which the first value is the start of the deadband and the second value is the end
-            sensorThetaOffset will be added to the point angle before the deadband is calculated however it is not perminently applied to the point. This should instead be done by the translation argument to addval
+            sensorThetaOffset will be added to the point angle before the deadband is calculated however it is not permanently applied to the point. This should instead be done by the translation argument to addVal
         """
         self.points={}
         self.deadband=deadband
@@ -45,11 +45,11 @@ class lidarMap:
         self.hostLidar=None
 
 
-    def addVal(self, point:lidarMeasurment, translation: translation, printFlag=False)->None:
+    def addVal(self, point:lidarMeasurement, translation: translation, printFlag=False)->None:
         """
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE
-            Adds a value to the lidars point list. if the inputed point shares an angle with a point already recorded by the lidar the old point will be replaced
-            The point will automaticly be discarded if it is within the deadband or if its quality or distance values are 0. 
+            Adds a value to the lidars point list. if the imputed point shares an angle with a point already recorded by the lidar the old point will be replaced
+            The point will automatically be discarded if it is within the deadband or if its quality or distance values are 0. 
             If the point has startFlag as true the point will not be logged and instead the lidar will be told to start a new map.
             The translation argument will be added to the point before the point is added to the map
             if printFlag is set to true information about the point will also be printed after all translation and validity checks. This means that invalid points will not be printed
@@ -60,7 +60,7 @@ class lidarMap:
 
         if point.start_flag:
             self.endTime=point.timeStamp
-            self.hostLidar.mapIsDone()
+            self.hostLidar._mapIsDone()
             return
 
         if point.quality==0 or point.distance==0:
@@ -89,20 +89,20 @@ class lidarMap:
         
     
 
-    def fetchPointAtClosestAngle(self, angle:float, tolerence=360)->lidarMeasurment:
+    def fetchPointAtClosestAngle(self, angle:float, tolerance=360)->lidarMeasurement:
         """
-            Returns the point in the map with the closest angle to the inputed angle. This search will not loop around 360.
-            If tolerence is set and the distance between the closest points angle and the requested angle is greater than tolerence None will be returned
-            Additionaly None will be returned if the map is empty 
+            Returns the point in the map with the closest angle to the imputed angle. This search will not loop around 360.
+            If tolerance is set and the distance between the closest points angle and the requested angle is greater than tolerance None will be returned
+            Additionally None will be returned if the map is empty 
         """
         if len(self.points)==0:
             return None
         foundPoint= self.points[min([key for key, value in self.points.items()], key=lambda value: abs(value - angle))]
-        if (foundPoint.angle-angle)>tolerence:
+        if (foundPoint.angle-angle)>tolerance:
             return 0
         return foundPoint
     
-    def getDistanceBetweeClosestAngle(self, angle:float)->float:
+    def getDistanceBetweenClosestAngle(self, angle:float)->float:
         """
             fetches the difference between the specified angle and the closest angle within the map. 
             If the map is empty None will be returned
@@ -111,7 +111,7 @@ class lidarMap:
             return None
         return abs(self.fetchPointAtClosestAngle(angle).angle-angle)
     
-    def getPoints(self)->list[lidarMeasurment.lidarMeasurement]:
+    def getPoints(self)->list[lidarMeasurement.lidarMeasurement]:
         """Returns a list of all the points within the map"""
         return list(self.points.values())
     
@@ -141,7 +141,7 @@ class lidarMap:
     def getHz(self)->float:
         """
             Returns the estimated Hz of the scanning based off how long this scan took.
-            WARNING this value may be inacurate and should not be relied on. it estimates Hz based on how many of this scan could be run in a second however this is not fully acurate and should be used as such
+            WARNING this value may be inaccurate and should not be relied on. it estimates Hz based on how many of this scan could be run in a second however this is not fully accurate and should be used as such
         """
         if self.startTime and self.endTime:
             return 1/self.getPeriod()
@@ -151,7 +151,7 @@ class lidarMap:
     def setOffset(self, theta:float)->None:
         """
             Sets the internal offset used by this map.
-            Theta will be added to the point angle before the deadband is calculated however it is not perminently applied to the point. This should instead be done by the translation argument to addval
+            Theta will be added to the point angle before the deadband is calculated however it is not permanently applied to the point. This should instead be done by the translation argument to addVal
             WARNING this function throws a error if theta is greater than 360 or less than 0
         """
         if theta>=0 and theta<360:

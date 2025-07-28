@@ -1,0 +1,29 @@
+{
+    "cSpell.words": [
+        "baudrate",
+        "blit",
+        "cmap",
+        "cpos",
+        "DMAX",
+        "dsrdtr",
+        "fargs",
+        "geteuid",
+        "Hitbox",
+        "Hitboxes",
+        "Hitboxing",
+        "lidarlib",
+        "lidars",
+        "multiexit",
+        "ndefualt",
+        "ntcore",
+        "rmax",
+        "RPLIDAR",
+        "SAMPLERATE",
+        "scalelvl",
+        "setstart",
+        "stopbits",
+        "VARBITSCALE",
+        "wpimath",
+        "deadband"
+    ]
+}

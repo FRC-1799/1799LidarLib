@@ -3,8 +3,8 @@ from wpimath.geometry import Pose2d, Rotation2d
 
 from constants import constants
 from lidarHitboxingMap import lidarHitboxMap
-from lidarLib.lidarMeasurment import lidarMeasurement
-from lidarHitboxNode import lidarHiboxNode
+from lidarLib.lidarMeasurement import lidarMeasurement
+from lidarHitboxNode import lidarHitboxNode
 from lidarLib.translation import translation
 
 
@@ -46,23 +46,22 @@ class publisher:
     def getPose(self)->Pose2d:
         return self.poseSubscriber.get()
 
-    def getPoseasTran(self)->Pose2d:
+    def getPoseAsTran(self)->Pose2d:
         return translation.fromPose2d(self.getPose())
     
     def publishPointsFromPoses(self, poses:list[Pose2d]):
         
         self.individualPointPublisher.set(poses)
     
-    def publishPointsFromLidarMeasurments(self, measurments:list[lidarMeasurement]):
+    def publishPointsFromLidarMeasurements(self, measurements:list[lidarMeasurement]):
         poses:list[Pose2d] = []
-        for measurment in measurments:
-            poses.append(Pose2d(measurment.getX(), measurment.getY(), Rotation2d()))
+        for measurement in measurements:
+            poses.append(Pose2d(measurement.getX(), measurement.getY(), Rotation2d()))
 
         self.publishPointsFromPoses(poses)
     
-    #def publishPointsFromLidarMeasurmentList(self, measurment:list[list[l]])
 
-    def publishHiboxesFromPoses(self, poses:list[Pose2d]):
+    def publishHitboxesFromPoses(self, poses:list[Pose2d]):
         
         self.hitboxPublisher.set(poses)
         
@@ -70,11 +69,11 @@ class publisher:
     def publishHitboxesFromHitboxMap(self, map:lidarHitboxMap):
         poses:list[Pose2d] = []
         for node in map.getAs1DList():
-            node:lidarHiboxNode
+            node:lidarHitboxNode
             if (not node.isOpen):
                 poses.append(Pose2d(node.x, node.y, Rotation2d()))
         
-        self.publishHiboxesFromPoses(poses)
+        self.publishHitboxesFromPoses(poses)
 
     def updateNodeWith(self, nodeWidth:int):
         self.nodeWidthPublisher.set(nodeWidth)

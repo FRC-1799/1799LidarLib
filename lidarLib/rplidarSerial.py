@@ -53,7 +53,7 @@ class RPlidarSerial:
         self.serial.write(data)
     
     def receiveData(self, size:int)->bytes:
-        """Recives and returns the specified number of bytes from the serial port. if not enough bytes are available all that are will be returned"""
+        """Receives and returns the specified number of bytes from the serial port. if not enough bytes are available all that are will be returned"""
         return self.serial.read(size)
 
     def setDtr(self, value:int)->None:

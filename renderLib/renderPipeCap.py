@@ -17,7 +17,7 @@ class renderPipeCap:
         """
         while self.pipe.poll():
         
-            #print("data receved")
+            #print("data received")
             temp = self.pipe.recv()
                 
             if temp.__class__ !=ping:    
@@ -27,7 +27,7 @@ class renderPipeCap:
 
         
     def send(self, sendable:lidarMap)->None:
-        """Sends the inputed lidar map to the other side of the pipe(aka the render machinel)"""
+        """Sends the imputed lidar map to the other side of the pipe(aka the render machine)"""
         
         self.pipe.send(sendable)
 

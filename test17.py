@@ -1,7 +1,7 @@
 
-'''Animates distances and measurment quality'''
+'''Animates distances and measurement quality'''
 from lidarLib.LidarConfigs import lidarConfigs
-from lidarLib.lidarMeasurment import lidarMeasurement
+from lidarLib.lidarMeasurement import lidarMeasurement
 from lidarLib.Lidar import Lidar
 import matplotlib.pyplot as plot
 import numpy as np
@@ -30,7 +30,7 @@ def run():
     for item in lidar.getScanModes():
         print(item)
     #lidar.startScan()
-    lidar.startScanExpress()
+    # lidar.startScanExpress()
     time.sleep(2)
 
     # axis = subplot.scatter([0, 1], [100, 2000], s=1, c=[IMIN, IMAX],
@@ -44,7 +44,7 @@ def run():
     renderer, pipe = initMachine()
     
     while pipe.isConnected():
-        pipe.send(lidar.lastMap)
+        pipe.send(lidar.getLastMap())
         time.sleep(0.1)
     # ani = animation.FuncAnimation(
     # fig, partial(update_line, lidar=lidar, line=line),

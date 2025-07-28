@@ -1,7 +1,7 @@
 
 '''Animates distances and measurment quality'''
 from lidarLib.LidarConfigs import lidarConfigs
-from lidarLib.lidarMeasurment import lidarMeasurement
+from lidarLib.lidarMeasurement import lidarMeasurement
 from lidarLib.Lidar import Lidar
 import matplotlib.pyplot as plot
 import numpy as np
@@ -41,7 +41,7 @@ def run():
     try:
         while pipe.isConnected():
             
-            pipe.send(lidar.getMap())
+            pipe.send(lidar.getLastMap())
             time.sleep(0.1)
             #print("data sent", lidar.lastMap.mapID)
     except Exception as e:

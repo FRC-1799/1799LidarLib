@@ -1,7 +1,7 @@
 
 '''Animates distances and measurment quality'''
 
-from lidarLib.lidarMeasurment import lidarMeasurement
+from lidarLib.lidarMeasurement import lidarMeasurement
 from lidarLib.Lidar import Lidar
 import matplotlib.pyplot as plot
 import numpy as np
@@ -49,7 +49,7 @@ def run():
         cartPipe.send(newMap)
         polarPipe.send(lidar.getMap())
         ntPublisher.publishHitboxesFromHitboxMap(newMap)
-        ntPublisher.publishPointsFromLidarMeasurments(lidar.getMap().getPoints())
+        ntPublisher.publishPointsFromLidarMeasurements(lidar.getMap().getPoints())
         ntPublisher.publishLidarPosesFromTrans([translation.fromCart(5000,5000,0)])
         time.sleep(0.1)
             #print("data sent", lidar.lastMap.mapID)

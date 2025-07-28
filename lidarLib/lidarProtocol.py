@@ -104,16 +104,16 @@ class RPlidarCommand:
 
     def getChecksum(self, data:bytes):
         """returns the checksum of the packet entered"""
-        chksum = 0
-        for value in data: chksum ^= value
-        return chksum
+        checkSum = 0
+        for value in data: checkSum ^= value
+        return checkSum
 
 
 class RPlidarResponse:
     """Class to define scan metadata information returned by the lidar"""
     
     def __init__(self, rawBytes:bytes):
-        """creates a rplidarResponce from the raw bytes returned by the lidar"""
+        """creates a rplidarResponse from the raw bytes returned by the lidar"""
         self.sync_byte1 = rawBytes[0]
         self.sync_byte2 = rawBytes[1]
         size_q30_length_type = struct.unpack("<L", rawBytes[2:6])[0]
@@ -144,8 +144,8 @@ class RPlidarDeviceInfo:
         self.firmware_minor = rawBytes[1]
         self.firmware_major = rawBytes[2]
         self.hardware = rawBytes[3]
-        self.serialnumber = codecs.encode(rawBytes[4:], 'hex').upper()
-        self.serialnumber = codecs.decode(self.serialnumber, 'ascii')
+        self.serialNumber = codecs.encode(rawBytes[4:], 'hex').upper()
+        self.serialNumber = codecs.decode(self.serialNumber, 'ascii')
 
     def __str__(self):
         data = {
@@ -153,17 +153,17 @@ class RPlidarDeviceInfo:
             "firmware_minor" : self.firmware_minor,
             "firmware_major" : self.firmware_major,
             "hardware" : self.hardware,
-            "serialnumber" : self.serialnumber
+            "serialNumber" : self.serialNumber
         }
         return str(data)
 
 
 class RPlidarHealth:
     """class to handle and store health information given by the lidar"""
-    def __init__(self, rawbytes:bytes):
-        """creates a lidar health object from the raw byte package returned by thge lidar"""
-        self.status = rawbytes[0]
-        self.error_code = (rawbytes[1] << 8) + rawbytes[2]
+    def __init__(self, rawBytes:bytes):
+        """creates a lidar health object from the raw byte package returned by the lidar"""
+        self.status = rawBytes[0]
+        self.error_code = (rawBytes[1] << 8) + rawBytes[2]
 
     def __str__(self):
         data = {
@@ -173,10 +173,10 @@ class RPlidarHealth:
         return str(data)
 
 
-class RPlidarSamplerate:
-    """Class to handle and store samplerate information given by the lidar"""
+class RPlidarSampleRate:
+    """Class to handle and store sampleRate information given by the lidar"""
     def __init__(self, rawBytes:bytes):
-        """creates a lidar samplerate object from the raw byte package returned by thge lidar"""
+        """creates a lidar sampleRate object from the raw byte package returned by the lidar"""
         self.t_standard = rawBytes[0] + (rawBytes[1] << 8)
         self.t_express = rawBytes[2] + (rawBytes[3] << 8)
     
@@ -441,7 +441,7 @@ class PyRPlidarScanUltraCapsule:
             
             dist_major = capsule_prev.ultra_cabins[pos].major
             
-            # signed partical integer, using the magic shift here
+            # signed partial integer, using the magic shift here
             # DO NOT TOUCH
             
             dist_predict1 = capsule_prev.ultra_cabins[pos].predict1

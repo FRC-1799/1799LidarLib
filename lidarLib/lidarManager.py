@@ -11,25 +11,25 @@ import stop
 from lidarLib.translation import translation
 
 def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
+    print("Manager start")
     pipeline:"lidarPipeline"=pipeline
     lidar:Lidar = Lidar(lidarConfig)
 
     if (not lidarConfig.autoConnect):
         raise ValueError("piped lidars must be created with auto connect on but lidar", lidarConfig.port, "was created as piped with it off")
 
-    if (lidarConfig.reportScanModes):
-        pipeline.sendScanTypes(lidar.getScanModes())
-    if (lidarConfig.reportSampleRate):
-        pipeline.sendSampleRate(lidar.getSampleRate())
 
-    if (lidarConfig.autoStart):
-        lidar.startScan()
+    pipeline._sendScanTypes(lidar.getScanModes())
+    pipeline._sendSampleRate(lidar.getSampleRate())
+    pipeline._sendLidarInfo(lidar.getInfo())
+    pipeline._sendScanModeTypical(lidar.getScanModeTypical())
+    pipeline._sendScanModeCount(lidar.getScanModeCount())
+
 
     multiexit.register(lidar.disconnect)
     quitCount=0
     timesReset=0
     
-    connectionArgs:list = None
     start =time.perf_counter()
 
     while pipeline.shouldLive:
@@ -49,7 +49,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
                 lidar.disconnect()
 
                 timesReset+= 1
-                pipeline.sendData(dataPacket(dataPacketType.quitWarning), timesReset)
+                pipeline._sendData(dataPacket(dataPacketType.quitWarning), timesReset)
                 time.sleep(0.001)
 
                 lidar:Lidar = Lidar(lidarConfigs)
@@ -62,11 +62,11 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
         
 
         if pipeline.getDataPacket(dataPacketType.translation):
-            lidar.setCurrentGlobalTranslaisConnectedtion(pipeline.getDataPacket(dataPacketType.translation))
+            lidar.setCurrentGlobalTranslation(pipeline.getDataPacket(dataPacketType.translation))
         
 
 
-        for action in pipeline.getActionQue():
+        for action in pipeline._getActionQue():
             if action.function==Lidar.startScan:
                 try:
                     action.function(lidar, *action.args)
@@ -86,17 +86,19 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
             elif action.returnType==-1:
                 action.function(lidar, *action.args)
             else:
-                pipeline.sendData(dataPacket(action.returnType, action.function(lidar, *action.args)))
+                pipeline._sendData(dataPacket(action.returnType, action.function(lidar, *action.args)))
 
-        if (lidarConfig.reportData and lidar.lastMap):
-            pipeline.sendMap(lidar.lastMap)
-        if (lidarConfig.reportCombinedOffset):
-            pipeline.sendTrans(lidar.getCombinedTrans())
+        if (lidar.getLastMap()):
+            pipeline._sendMap(lidar.getLastMap())
+        
+        pipeline._sendTrans(lidar.getCombinedTrans())
 
         
 
         if (start+0.02-time.perf_counter())>0:
             time.sleep(start+0.02-time.perf_counter())
+
+        
         start+=0.02
 
     print("lidar shut down")
@@ -107,10 +109,13 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
 
 def makePipedLidar(lidarConfig:lidarConfigs)-> "lidarPipeline":
     """
-        Creates a seperate prosses that handles all rendering and can be updated via a pipe(connection)
-        returns a tuple with the first argument being the process, this can be use cancle the process but the primary use is to be saved so the renderer doesnt get collected
-        the second argument is one end of a pipe that is used to update the render engine. this pipe should be passed new lidar maps periodicly so they can be rendered. 
+        Creates a separate process that handles all rendering and can be updated via a pipe(connection)
+        returns a tuple with the first argument being the process, this can be use cancel the process but the primary use is to be saved so the renderer doesn't get garbage collected
+        the second argument is one end of a pipe that is used to update the render engine. This pipe should be passed new lidar maps periodically so they can be rendered. 
     """
+
+
+    print("manager")
     returnPipe, lidarPipe = Pipe(duplex=True)
     returnPipe=lidarPipeline(returnPipe)
     lidarPipe=lidarPipeline(lidarPipe)

@@ -3,11 +3,11 @@ import time
 from lidarLib.util import polarToX, polarToY
 
 class lidarMeasurement:
-    """Class to handle a single lidar measurment, qoordinates are normaly stored in polar but may be gotten in cartisian form using the getX, getY, and getCat methods"""
+    """Class to handle a single lidar measurement, coordinates are normally stored in polar but may be gotten in cartesian form using the getX, getY, and getCat methods"""
     def __init__(self, raw_bytes=None, measurement_hq=None):
         """
-            initalizes a lidar measurment using a package from the lidar
-            while measurment_hq objects are accpeted by this function the class is currently deprecated and should not be used
+            initializes a lidar measurement using a package from the lidar
+            while measurement_hq objects are accepted by this function the class is currently deprecated and should not be used
         """
         self.timeStamp=time.time()
 
@@ -21,11 +21,11 @@ class lidarMeasurement:
             self.start_flag=True if measurement_hq.start_flag==0x1 else False
             self.quality=measurement_hq.quality
             self.angle = ((measurement_hq.angle_z_q14*90)>>8)/64.0
-            self.distance= (measurement_hq.dist_mm_q2)/4.0
+            self.distance= ((measurement_hq.dist_mm_q2)/4.0)/1000
 
     @classmethod
     def default(cls, start_flag:bool, quality:int, angle:float, distance:float, isInMM=True)->"lidarMeasurement":
-        """initalizes a lidarMeasurment using the values specified. this method is only intended for debugging perpouses. For creating measurments from a lidar use the standard constructer"""
+        """initializes a lidarMeasurement using the values specified. this method is only intended for debugging purposes. For creating measurements from a lidar use the standard constructor"""
         new = cls()
         new.start_flag=start_flag
         new.quality=quality
@@ -49,21 +49,21 @@ class lidarMeasurement:
         return str(data)
 
     def getAngle(self)->float:
-        """returns the measurments angle as a float"""
+        """returns the measurements angle as a float"""
         return self.angle
 
     def getDistance(self)->float:
-        """returns the measurments distance as a loat"""
+        """returns the measurements distance as a float"""
         return self.distance
 
     def getX(self)->float:
-        """returns the X of the measurment. This value is not directly stored and is instead calculated whenever the function is called"""
+        """returns the X of the measurement. This value is not directly stored and is instead calculated whenever the function is called"""
         return polarToX(self.distance, self.angle)
 
     def getY(self)->float:
-        """returns the Y of the measurment. This value is not directly stored and is instead calculated whenever the function is called"""
+        """returns the Y of the measurement. This value is not directly stored and is instead calculated whenever the function is called"""
         return polarToY(self.distance, self.angle)
     
     def getCart(self)->tuple[float, float]:
-        """returns the x and y of the measurment as a tuple. This value is not directly stored and is instead calculated whenever the function is called """
+        """returns the x and y of the measurement as a tuple. This value is not directly stored and is instead calculated whenever the function is called """
         return self.polarToCart(self.distance, self.angle)

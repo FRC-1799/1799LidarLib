@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 '''Animates distances and measurement quality'''
 import math
-from lidarLib.lidarMeasurment import lidarMeasurement
+from lidarLib.lidarMeasurement import lidarMeasurement
 from lidarLib.Lidar import Lidar
 import time
 from lidarLib.translation import translation
@@ -41,7 +41,7 @@ def run():
 
 def printPointLocations(lidar: Lidar):
     # Iterate through the points from the lidar map
-    for point in lidar.lastMap.getPoints():
+    for point in lidar.__lastMap.getPoints():
         cart_vals = point.getCart()  # Get Cartesian coordinates (x, y)
         x, y = cart_vals
 

@@ -1,6 +1,6 @@
 
 '''Animates distances and measurment quality'''
-from lidarLib.lidarMeasurment import lidarMeasurement
+from lidarLib.lidarMeasurement import lidarMeasurement
 from lidarLib.Lidar import Lidar
 import matplotlib.pyplot as plot
 import numpy as np
@@ -41,7 +41,7 @@ def run():
     renderer, pipe = initMachine()
     
     while pipe.isConnected():
-        pipe.send(lidar.lastMap)
+        pipe.send(lidar.getLastMap())
         time.sleep(0.1)
     # ani = animation.FuncAnimation(
     # fig, partial(update_line, lidar=lidar, line=line),
