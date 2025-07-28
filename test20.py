@@ -1,0 +1,3 @@
+from lidarLib.FRCQuickstartLidarProject import FRCQuickstartLidarProject
+
+FRCQuickstartLidarProject.fromConfigs("lidarProject.json")

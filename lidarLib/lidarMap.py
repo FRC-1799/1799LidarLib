@@ -1,5 +1,4 @@
 from lidarLib import lidarMeasurement
-import lidarLib.Lidar
 from lidarLib.translation import translation
 
 class lidarMap:

@@ -101,6 +101,13 @@ class lidarConfigs:
             with open(path, 'r') as file:
                 data:dict = json.load(file)
 
+                if data.get("type", "") != "lidarConfig":
+                    raise Warning(
+                        "the file given does not include the correct type tag.",
+                        "Please make sure to include \"type\" : \"lidarConfig\" in all lidar config files so that the library can easily differentiate them."
+                    )
+
+
                 return cls(
                     port = data.get("port"), 
                     vendorID = data.get("vendorID", lidarConfigs.defaultConfigs["vendorID"]),
@@ -158,6 +165,7 @@ class lidarConfigs:
                 "productID" : self.productID,
                 "vendorID" : self.vendorID,
                 "name" : self.name,
+                "type" : "lidarConfig"
             }
 
             keysToRemove = []

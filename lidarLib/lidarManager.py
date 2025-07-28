@@ -1,6 +1,5 @@
 import signal
 from lidarLib.LidarConfigs import lidarConfigs
-import multiexit
 from multiprocessing import Pipe, Process
 from lidarLib import *
 from lidarLib.Lidar import Lidar
@@ -26,7 +25,6 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
     pipeline._sendScanModeCount(lidar.getScanModeCount())
 
 
-    multiexit.register(lidar.disconnect)
     quitCount=0
     timesReset=0
     
@@ -121,11 +119,7 @@ def makePipedLidar(lidarConfig:lidarConfigs)-> "lidarPipeline":
     lidarPipe=lidarPipeline(lidarPipe)
     process= Process(target=lidarManager, args=(lidarPipe, lidarConfig), daemon=True)
     returnPipe.host=process
-    
-    try:
-        multiexit.install()
-    except RuntimeError as e:
-        print(e)
+
     process.start()
 
 

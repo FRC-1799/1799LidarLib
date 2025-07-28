@@ -63,7 +63,6 @@ def session(ntPublisher:publisher, shouldLiveSupplier:callable):
     
 
 def main():
-    multiexit.install()
     ntPublisher = publisher(teamNumber=1799)
     thread = threading.Thread(target=session, daemon=True, kwargs={"ntPublisher":ntPublisher, "shouldLiveSupplier":ntPublisher.isConnected})
     
