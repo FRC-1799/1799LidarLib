@@ -289,16 +289,23 @@ class Lidar:
 
         return descriptor
 
-    def __receiveData(self, descriptor:RPlidarResponse)->bytes:
+    def __receiveData(self, descriptor:RPlidarResponse, waitTime=0)->bytes:
         """
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE.
-            Fetches a package from the lidar using the entered descriptor as a guide. Will return none if the buffer doesnt contain enough data.
+            Fetches a package from the lidar using the entered descriptor as a guide. Will return none if the buffer doesn't contain enough data.
         """
         if self.lidarSerial == None:
             raise RPlidarConnectionError("PyRPlidar Error : device is not connected")
-        if self.lidarSerial.bufferSize()>=descriptor.data_length:
-            return self.lidarSerial.receiveData(descriptor.data_length)
-        return None
+        count=0
+        
+        while self.lidarSerial.bufferSize()<descriptor.data_length:
+            sleep(0.001)
+            count+=0.001
+            if count>waitTime:
+                return None
+            
+        return self.lidarSerial.receiveData(descriptor.data_length)
+        
 
 
 
@@ -336,7 +343,9 @@ class Lidar:
         """
         self.__sendCommand(RPLIDAR_CMD_GET_INFO)
         descriptor = self.__receiveDescriptor()
-        data = self.__receiveData(descriptor)
+        data = self.__receiveData(descriptor, 1)
+        if data==None:
+            raise RuntimeError("Could not fetch info from the lidar")
         self.lidarInfo = RPlidarDeviceInfo(data)
 
 
@@ -360,7 +369,9 @@ class Lidar:
 
         self.__sendCommand(RPLIDAR_CMD_GET_HEALTH)
         descriptor = self.__receiveDescriptor()
-        data = self.__receiveData(descriptor)
+        data = self.__receiveData(descriptor, 1)
+        if data==None:
+            raise RuntimeError("Could not get health data from the lidar")
         self.lidarHealth = RPlidarHealth(data)
 
     def getHealth(self)->RPlidarHealth:
@@ -380,7 +391,9 @@ class Lidar:
         """
         self.__sendCommand(RPLIDAR_CMD_GET_SAMPLERATE)
         descriptor = self.__receiveDescriptor()
-        data = self.__receiveData(descriptor)
+        data = self.__receiveData(descriptor,1)
+        if data==None:
+            raise RuntimeError("Could not get sample rate from the lidar")
         self.sampleRate = RPlidarSampleRate(data)
 
     def getSampleRate(self)->RPlidarSampleRate:
@@ -402,7 +415,9 @@ class Lidar:
         
         self.__sendCommand(RPLIDAR_CMD_GET_LIDAR_CONF, payload)
         descriptor = self.__receiveDescriptor()
-        data = self.__receiveData(descriptor)
+        data = self.__receiveData(descriptor, 1)
+        if data==None:
+            raise RuntimeError("Could not get config data from the lidar")
         return data
 
     def __getScanModeCount(self)->None:
