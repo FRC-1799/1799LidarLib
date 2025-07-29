@@ -289,10 +289,10 @@ class Lidar:
         
         count=0
         while self.lidarSerial.bufferSize()<7:
-            sleep(0.0001)
-            count+=0.0001
+            sleep(0.001)
+            count+=0.001
             if count>10:
-                raise RPlidarConnectionError("did not receive connection response from RPlidar:", self.configs.name)
+                raise RPlidarConnectionError("did not receive connection response from RPlidar:", self.config.name)
 
 
         descriptor = RPlidarResponse(self.lidarSerial.receiveData(RPLIDAR_DESCRIPTOR_LEN))

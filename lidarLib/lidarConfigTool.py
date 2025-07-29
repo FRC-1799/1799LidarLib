@@ -423,7 +423,6 @@ class lidarConfigurationTool:
             while serialPort.in_waiting<7:
                 time.sleep(0.01)
                 count+=0.01
-                print(count)
                 if count>1:
                     break
             if count>1: continue
