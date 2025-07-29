@@ -20,6 +20,11 @@ class Lidar:
     """class to handle, read, and translate data from a RPlidar (only A2M12 has been tested but should work for all)"""
     def __init__(self, config:lidarConfigs):
         """initializes lidar object but does not attempt to connect or start any scans"""
+
+        if config.isStop:
+            self.isStopFunction()
+            return
+
         self.lidarSerial = None
         self.measurements = None
         self.currentMap=lidarMap(self)
@@ -67,6 +72,14 @@ class Lidar:
 
     def __exit__(self, exceptionType, exceptionValue, exceptionTraceback):
         self.disconnect()
+
+
+    def isStopFunction(self):
+        self.lidarSerial = RPlidarSerial()
+        self.lidarSerial.open(self.config.port, self.config.vendorID, self.config.productID, self.config.serialNumber, self.config.baudrate,timeout=self.config.timeout)
+        if self.isConnected():
+            self.disconnect()
+
 
     def connect(self)->None:
         """Connects to a lidar object with the information specified in the config file."""

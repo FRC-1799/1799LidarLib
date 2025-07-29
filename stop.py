@@ -4,11 +4,11 @@ import sys
 from lidarLib.LidarConfigs import lidarConfigs
 
 def stop(port:str):
+    config = lidarConfigs.configsFromJson(port)
+    config.isStop=True
     lidar = Lidar(lidarConfigs.configsFromJson(port))
-    lidar.connect()
 
-    lidar.stop()
-    lidar.disconnect()
+
 
 if __name__ == '__main__':
     if len(sys.argv)>1:
