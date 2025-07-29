@@ -364,7 +364,9 @@ class lidarConfigurationTool:
                     "Baudrate tells the system how fast the lidar will send packages. " +
                     "If your lidar model has a 5pin to usb adapter it may have a switch on the side to change Baudrate with the numbers written on it.\n" +
                     "Otherwise check the specific models documentation to find the baudrate. "
-            ): self.findBaudRate()
+            ): 
+                self.findBaudRate()
+                return
             
             
             baudrate=None
@@ -419,19 +421,24 @@ class lidarConfigurationTool:
             serialPort.write(RPlidarCommand(RPLIDAR_CMD_GET_HEALTH, None).raw_bytes)
             count=0
             while serialPort.in_waiting<7:
-                time.sleep(0.0001)
-                count+=0.0001
-                if count>10:
-                    continue
+                time.sleep(0.01)
+                count+=0.01
+                print(count)
+                if count>1:
+                    break
+            if count>1: continue
+            
+            descriptor = RPlidarResponse(serialPort.read(RPLIDAR_DESCRIPTOR_LEN))
+
                     
             if descriptor.sync_byte1 != RPLIDAR_SYNC_BYTE1[0] or descriptor.sync_byte2 != RPLIDAR_SYNC_BYTE2[0]:
                 continue
 
 
-            descriptor = RPlidarResponse(serialPort.read(RPLIDAR_DESCRIPTOR_LEN))
             
             while serialPort.in_waiting<descriptor.data_length:
                 time.sleep(0.1)
+                print("loop")
             data = serialPort.read(descriptor.data_length)
             
             health = RPlidarHealth(data)
