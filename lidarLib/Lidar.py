@@ -279,7 +279,7 @@ class Lidar:
             sleep(0.0001)
             count+=0.0001
             if count>10:
-                raise RPlidarConnectionError("did not recive connection responce from RPlidar:", self.configs.name)
+                raise RPlidarConnectionError("did not receive connection response from RPlidar:", self.configs.name)
 
 
         descriptor = RPlidarResponse(self.lidarSerial.receiveData(RPLIDAR_DESCRIPTOR_LEN))
@@ -292,16 +292,13 @@ class Lidar:
     def __receiveData(self, descriptor:RPlidarResponse)->bytes:
         """
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE.
-            fetches a package from the lidar using the entered descriptor as a guide.
+            Fetches a package from the lidar using the entered descriptor as a guide. Will return none if the buffer doesnt contain enough data.
         """
         if self.lidarSerial == None:
             raise RPlidarConnectionError("PyRPlidar Error : device is not connected")
-        
-        data = self.lidarSerial.receiveData(descriptor.data_length)
-        #print(data)
-        if len(data) != descriptor.data_length:
-            raise RPlidarProtocolError()
-        return data
+        if self.lidarSerial.bufferSize()>=descriptor.data_length:
+            return self.lidarSerial.receiveData(descriptor.data_length)
+        return None
 
 
 

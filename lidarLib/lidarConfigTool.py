@@ -11,7 +11,7 @@ from lidarLib.Lidar import Lidar
 from lidarLib.LidarConfigs import lidarConfigs
 from serial.tools import list_ports
 
-from lidarLib.lidarProtocol import RPLIDAR_MAX_MOTOR_PWM
+from lidarLib.lidarProtocol import RPLIDAR_CMD_GET_HEALTH, RPLIDAR_DESCRIPTOR_LEN, RPLIDAR_MAX_MOTOR_PWM, RPLIDAR_SYNC_BYTE1, RPLIDAR_SYNC_BYTE2, RPlidarCommand, RPlidarConnectionError, RPlidarHealth, RPlidarProtocolError, RPlidarResponse
 from renderLib.renderMachine import initMachine
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
@@ -416,10 +416,24 @@ class lidarConfigurationTool:
         ser.timeout = 0.5
         for baudrate in [115200, 256000]:
             ser.baudrate = baudrate
-            ser.write(packet)
-            resp = ser.readall()
-            if resp == packet:
-                return baudrate
+            ser.sendData(RPlidarCommand(RPLIDAR_CMD_GET_HEALTH, None).raw_bytes)
+            count=0
+            while ser.bufferSize()<7:
+                time.sleep(0.0001)
+                count+=0.0001
+                if count>10:
+                    raise RPlidarConnectionError("did not receive connection response from RPlidar:", self.configs.name)
+
+
+            descriptor = RPlidarResponse(ser.receiveData(RPLIDAR_DESCRIPTOR_LEN))
+            
+            data = self.lidarSerial.receiveData(descriptor.data_length)
+            #print(data)
+            if len(data) != descriptor.data_length:
+                raise RPlidarProtocolError()
+            health = RPlidarHealth(data)
+        
+        
         return 'Unknown'
     
 
