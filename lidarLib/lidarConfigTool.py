@@ -402,7 +402,7 @@ class lidarConfigurationTool:
 
             
 
-    def baudRateAutoTest(self, packet = b' '):
+    def baudRateAutoTest(self):
         
 
         for bus in list_ports.comports():
@@ -412,26 +412,34 @@ class lidarConfigurationTool:
         if not port:
             raise ValueError("Could not find port associated with lidar")
 
-        ser = serial.Serial(port)
-        ser.timeout = 0.5
+        serialPort = serial.Serial(port)
+        serialPort.timeout = 0.5
         for baudrate in [115200, 256000]:
-            ser.baudrate = baudrate
-            ser.sendData(RPlidarCommand(RPLIDAR_CMD_GET_HEALTH, None).raw_bytes)
+            serialPort.baudrate = baudrate
+            serialPort.write(RPlidarCommand(RPLIDAR_CMD_GET_HEALTH, None).raw_bytes)
             count=0
-            while ser.bufferSize()<7:
+            while serialPort.in_waiting<7:
                 time.sleep(0.0001)
                 count+=0.0001
                 if count>10:
-                    raise RPlidarConnectionError("did not receive connection response from RPlidar:", self.configs.name)
+                    continue
+                    
+            if descriptor.sync_byte1 != RPLIDAR_SYNC_BYTE1[0] or descriptor.sync_byte2 != RPLIDAR_SYNC_BYTE2[0]:
+                continue
 
 
-            descriptor = RPlidarResponse(ser.receiveData(RPLIDAR_DESCRIPTOR_LEN))
+            descriptor = RPlidarResponse(serialPort.read(RPLIDAR_DESCRIPTOR_LEN))
             
-            data = self.lidarSerial.receiveData(descriptor.data_length)
-            #print(data)
-            if len(data) != descriptor.data_length:
-                raise RPlidarProtocolError()
+            while serialPort.in_waiting<descriptor.data_length:
+                time.sleep(0.1)
+            data = serialPort.read(descriptor.data_length)
+            
             health = RPlidarHealth(data)
+            if health.status!=0:
+                continue
+
+            print(baudrate)
+            return baudrate
         
         
         return 'Unknown'
