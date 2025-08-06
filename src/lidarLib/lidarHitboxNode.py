@@ -1,4 +1,4 @@
-from src.lidarLib.constants import constants
+from lidarLib.constants import constants
 from lidarLib.lidarMeasurement import lidarMeasurement
 
 

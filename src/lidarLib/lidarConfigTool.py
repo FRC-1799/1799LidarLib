@@ -12,7 +12,7 @@ from lidarLib.LidarConfigs import lidarConfigs
 from serial.tools import list_ports
 
 from lidarLib.lidarProtocol import RPLIDAR_CMD_GET_HEALTH, RPLIDAR_DESCRIPTOR_LEN, RPLIDAR_MAX_MOTOR_PWM, RPLIDAR_SYNC_BYTE1, RPLIDAR_SYNC_BYTE2, RPlidarCommand, RPlidarConnectionError, RPlidarHealth, RPlidarProtocolError, RPlidarResponse
-from renderLib.renderMachine import initMachine
+from lidarLib.renderLib.renderMachine import initMachine
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 

@@ -1,7 +1,7 @@
 import json
 import threading
 import time
-from src.lidarLib.lidarHitboxingMap import lidarHitboxMap
+from lidarLib.lidarHitboxingMap import lidarHitboxMap
 from lidarLib import lidarManager
 from lidarLib.FRCLidarPublisher import publisher
 from lidarLib.Lidar import Lidar

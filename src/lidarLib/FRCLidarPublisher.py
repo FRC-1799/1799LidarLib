@@ -3,10 +3,10 @@ import time
 import ntcore
 from wpimath.geometry import Pose2d, Rotation2d
 
-from src.lidarLib.constants import constants
-from src.lidarLib.lidarHitboxingMap import lidarHitboxMap
+from lidarLib.constants import constants
+from lidarLib.lidarHitboxingMap import lidarHitboxMap
 from lidarLib.lidarMeasurement import lidarMeasurement
-from src.lidarLib.lidarHitboxNode import lidarHitboxNode
+from lidarLib.lidarHitboxNode import lidarHitboxNode
 from lidarLib.translation import translation
 
 

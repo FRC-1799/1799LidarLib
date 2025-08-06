@@ -1,3 +1,3 @@
 from lidarLib.lidarConfigTool import demoRun
 
-demoRun("testFile.json")
+demoRun("lidar0.json")
