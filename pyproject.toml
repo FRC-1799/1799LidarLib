@@ -15,9 +15,20 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: POSIX :: Linux",
 ]
+
+dependencies = [
+  "pyserial",
+  "matplotlib",
+  "pygame",
+  "robotpy"
+]
+
+
 license = "MIT"
 license-files = ["LICEN[CS]E*"]
 
 [project.urls]
-Homepage = "https://github.com/pypa/sampleproject"
-Issues = "https://github.com/pypa/sampleproject/issues"
+Homepage = "https://github.com/FRC-1799/LidarDetection"
+Issues = "https://github.com/FRC-1799/LidarDetection/issues"
+[tool.hatch.build.targets.wheel]
+packages = ["src/lidarLib"]
