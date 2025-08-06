@@ -10,10 +10,10 @@ from functools import partial
 import pickle
 import time
 from lidarLib.translation import translation
-from publisher import publisher
+from src.lidarLib.publisher import publisher
 from renderLib.renderMachine import initMachine
 from lidarLib import lidarManager, lidarPipeline
-import lidarHitboxingMap
+import src.lidarLib.lidarHitboxingMap as lidarHitboxingMap
 
 
 PORT_NAME = '/dev/ttyUSB0'

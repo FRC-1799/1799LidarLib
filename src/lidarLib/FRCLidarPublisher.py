@@ -1,32 +1,37 @@
+import threading
+import time
 import ntcore
 from wpimath.geometry import Pose2d, Rotation2d
 
-from constants import constants
-from lidarHitboxingMap import lidarHitboxMap
+from src.lidarLib.constants import constants
+from src.lidarLib.lidarHitboxingMap import lidarHitboxMap
 from lidarLib.lidarMeasurement import lidarMeasurement
-from lidarHitboxNode import lidarHitboxNode
+from src.lidarLib.lidarHitboxNode import lidarHitboxNode
 from lidarLib.translation import translation
 
 
 class publisher:
-    def __init__ (self):
-        self.inst:ntcore.NetworkTableInstance = ntcore.NetworkTableInstance.getDefault()
-        #self.inst.setServerTeam(1799)
-        
-        self.inst.setServer("127.0.0.1")
-        #self.inst.startServer()
-        self.inst.startClient4("lidar")
+    def __init__ (self, teamNumber, autoConnect=True):
+        self.publisher=None
+
+        self.teamNumber=teamNumber
+        self.autoConnect=autoConnect
+
+        if self.autoConnect:
+            self.loop = threading.Thread(target=self.connectionTester, daemon=True)
+            self.loop.start()
+
+    def setUpTables(self):
         
 
-
-        self.publishFolder=  self.inst.getTable("lidar")
+        self.publishFolder=  self.publisher.getTable("lidar")
         self.individualPointTopic = self.publishFolder.getStructArrayTopic("individualReadings", Pose2d)
         self.individualPointPublisher = self.individualPointTopic.publish()
 
         self.hitboxTopic = self.publishFolder.getStructArrayTopic("detectedHitboxes", Pose2d)
         self.hitboxPublisher = self.hitboxTopic.publish()
 
-        self.poseTopic = self.inst.getStructTopic("robotPose", Pose2d)
+        self.poseTopic = self.publisher.getStructTopic("robotPose", Pose2d)
         self.poseSubscriber = self.poseTopic.subscribe(Pose2d())
         
 
@@ -37,13 +42,51 @@ class publisher:
         self.lidarPoseTopic = self.publishFolder.getStructArrayTopic("lidarPoses", Pose2d)
         self.lidarPosePublisher = self.lidarPoseTopic.publish()
 
-        print ("publisher is up and running")
-        print(self.inst.getNetworkMode())
+
+    def connect(self, port:str=None, teamNumber:int=None, name="lidar", startAsServer=False, saveConnectionIfSuccessful=True)->bool:
+        connecter:ntcore.NetworkTableInstance = ntcore.NetworkTableInstance.getDefault()
+        if port == teamNumber:
+            raise ValueError("Must give a team number or a port when trying to connect to network tables. values given were port:", port,". TeamNumber:", teamNumber)
+
+        if teamNumber:
+            connecter.setServerTeam(teamNumber)
+
+        else:
+            connecter.setServer(port)
         
+        
+        if startAsServer:
+            pass#connecter.startServer()
+        else:
+            connecter.startClient4(name)
 
 
+        if connecter.isConnected() and saveConnectionIfSuccessful:
+            self.publisher=connecter
+            self.setUpTables()
+
+
+        return connecter.isConnected()
+    
+
+    def connectionTester(self):
+        while True:
+            if self.teamNumber!=0:        
+                if self.connect(teamNumber=self.teamNumber) or self.connect(port="127.0.0.1"):
+                    break
+            else:
+                if self.connect(port="127.0.0.1"):
+                    break
+
+            time.sleep(4)
+        print("Connected on port", self.publisher.getConnections()[0].remote_ip)
+                
 
     def getPose(self)->Pose2d:
+        # TODO
+        # if self.poseSubscriber.getLastChange()< publisher.getServerTimeOffset()-0.2 and not self.isConnectedToSim():
+        #     raise Warning("robot pose data (at position \"robotPose\"is not being consistently updated. This can cause lidar data to be inaccurate")
+        
         return self.poseSubscriber.get()
 
     def getPoseAsTran(self)->Pose2d:
@@ -89,5 +132,9 @@ class publisher:
 
         self.publishLidarPosesFromPose(poses)
 
+    def isConnectedToSim(self)->bool:
+        return self.publisher.isConnected() and self.publisher.getConnections()[0].remote_ip == "127.0.0.1"
+        
+
     def isConnected(self)->bool:
-        return self.inst.isConnected()
+        return self.publisher and self.publisher.isConnected()

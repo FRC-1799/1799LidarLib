@@ -1,6 +1,6 @@
 import math
-from constants import constants
-from lidarHitboxNode import lidarHitboxNode
+from src.lidarLib.constants import constants
+from src.lidarLib.lidarHitboxNode import lidarHitboxNode
 from lidarLib.lidarMeasurement import lidarMeasurement
 from lidarLib.lidarMap import lidarMap
 from wpimath.geometry import Pose2d

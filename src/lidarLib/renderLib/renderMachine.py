@@ -5,10 +5,10 @@ from matplotlib.axis import Axis
 import matplotlib.animation as animation
 import numpy as np
 from multiprocessing import Process, Pipe
-import lidarHitboxNode
-from lidarHitboxingMap import lidarHitboxMap
+import src.lidarLib.lidarHitboxNode as lidarHitboxNode
+from src.lidarLib.lidarHitboxingMap import lidarHitboxMap
 from renderLib.renderPipeCap import renderPipeCap
-from constants import constants
+from src.lidarLib.constants import constants
 
 DMAX=4000
 
