@@ -33,3 +33,6 @@ Homepage = "https://github.com/FRC-1799/LidarDetection"
 Issues = "https://github.com/FRC-1799/LidarDetection/issues"
 [tool.hatch.build.targets.wheel]
 packages = ["src/lidarLib"]
+
+
+pypi-AgENdGVzdC5weXBpLm9yZwIkZjdiZjZmZTMtOGFhMS00NDM4LTlkOTAtOWZhMTgyNmZmOGVlAAIqWzMsIjllYjljYjc1LTBlNzgtNGRjMi05ODYzLWZlNjViMmM3NWU1ZiJdAAAGILmjy5nUosrh8rBAPk3AqTiJuBSl_ZVP6veUZ4nnMkgP
