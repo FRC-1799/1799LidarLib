@@ -7,7 +7,7 @@ import numpy as np
 from multiprocessing import Process, Pipe
 import lidarLib.lidarHitboxNode as lidarHitboxNode
 from lidarLib.lidarHitboxingMap import lidarHitboxMap
-from renderLib.renderPipeCap import renderPipeCap
+from lidarLib.renderLib.renderPipeCap import renderPipeCap
 from lidarLib.constants import constants
 
 DMAX=4000

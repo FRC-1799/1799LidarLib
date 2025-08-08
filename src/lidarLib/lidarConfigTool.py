@@ -5,7 +5,7 @@ import threading
 import time
 
 import serial
-
+from importlib import resources
 from lidarLib.translation import translation
 from lidarLib.Lidar import Lidar
 from lidarLib.LidarConfigs import lidarConfigs
@@ -159,7 +159,6 @@ class lidarConfigurationTool:
         self.defaults = lidarConfigs.defaultConfigs
         self.configFile:lidarConfigs=None
         # self.configFile = lidarConfigs(port="lol")
-
 
         # #opening
         self.opening()
@@ -504,8 +503,12 @@ class lidarConfigurationTool:
         white = (255,255,255)
 
         clock = pygame.time.Clock()
-        robotImg = pygame.image.load('lidarLib/robot.png')
-        lidarImg = pygame.image.load('lidarLib/lidar.png')
+        
+    
+        directory = os.path.dirname(os.path.realpath(__file__))
+        print(directory)
+        robotImg = pygame.image.load(os.path.join(directory, 'robot.png'))
+        lidarImg = pygame.image.load(os.path.join(directory, 'lidar.png'))
         imageRect = lidarImg.get_rect(center=(displayWidth // 2, displayHeight // 2))
 
 

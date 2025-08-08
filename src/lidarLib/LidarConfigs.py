@@ -138,10 +138,10 @@ class lidarConfigs:
 
 
         except FileNotFoundError:
-            print(f"Error: File not found at path: [path]")
+            print(f"Error: File not found at path:", path)
             return None
         except json.JSONDecodeError:
-            print(f"Error: Invalid JSON format in file: [path]")
+            print(f"Error: Invalid JSON format in file:", path)
             return None
 
     def writeToJson(self, path:str):
