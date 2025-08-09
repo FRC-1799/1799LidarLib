@@ -107,9 +107,9 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
 
 def makePipedLidar(lidarConfig:lidarConfigs)-> "lidarPipeline":
     """
-        Creates a separate posses that handles all rendering and can be updated via a pipe(connection)
-        returns a tuple with the first argument being the process, this can be use cancel the process but the primary use is to be saved so the renderer doesn't get collected
-        the second argument is one end of a pipe that is used to update the render engine. this pipe should be passed new lidar maps periodically so they can be rendered. 
+        Creates a separate process that handles all rendering and can be updated via a pipe(connection)
+        returns a tuple with the first argument being the process, this can be use cancel the process but the primary use is to be saved so the renderer doesn't get garbage collected
+        the second argument is one end of a pipe that is used to update the render engine. This pipe should be passed new lidar maps periodically so they can be rendered. 
     """
 
 

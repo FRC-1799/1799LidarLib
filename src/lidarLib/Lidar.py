@@ -625,9 +625,10 @@ class Lidar:
             If the second argument is larger than the first the deadband will be assumed to wrap past 360 degrees. 
         """
         self.config.deadband=deadband
+        self.currentMap.setDeadband(deadband)
+
 
 
     def getLastMap(self)->lidarMap:
         """Returns the last full map measured by the lidar."""
         return self.__lastMap
-        self.currentMap.setDeadband(deadband)
