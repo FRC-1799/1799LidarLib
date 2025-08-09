@@ -1,28 +1,28 @@
-import signal
+
 from lidarLib.LidarConfigs import lidarConfigs
 from multiprocessing import Pipe, Process
 from lidarLib import *
 from lidarLib.Lidar import Lidar
-from lidarLib.lidarMap import lidarMap
+
 from lidarLib.lidarPipeline import dataPacket, dataPacketType, lidarPipeline
 import time
-import tests.stop as stop
-from lidarLib.translation import translation
+
+
 
 def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
     print("Manager start")
-    pipeline:"lidarPipeline"=pipeline
+
     lidar:Lidar = Lidar(lidarConfig)
 
     if (not lidarConfig.autoConnect):
         raise ValueError("piped lidars must be created with auto connect on but lidar", lidarConfig.port, "was created as piped with it off")
 
 
-    pipeline._sendScanTypes(lidar.getScanModes())
-    pipeline._sendSampleRate(lidar.getSampleRate())
-    pipeline._sendLidarInfo(lidar.getInfo())
-    pipeline._sendScanModeTypical(lidar.getScanModeTypical())
-    pipeline._sendScanModeCount(lidar.getScanModeCount())
+    pipeline._sendScanTypes(lidar.getScanModes()) # type: ignore
+    pipeline._sendSampleRate(lidar.getSampleRate()) # type: ignore
+    pipeline._sendLidarInfo(lidar.getInfo()) # type: ignore
+    pipeline._sendScanModeTypical(lidar.getScanModeTypical()) # type: ignore
+    pipeline._sendScanModeCount(lidar.getScanModeCount()) # type: ignore
 
 
     quitCount=0
@@ -47,10 +47,10 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
                 lidar.disconnect()
 
                 timesReset+= 1
-                pipeline._sendData(dataPacket(dataPacketType.quitWarning), timesReset)
+                pipeline._sendData(dataPacket(dataPacketType.quitWarning, timesReset)) # type: ignore
                 time.sleep(0.001)
 
-                lidar:Lidar = Lidar(lidarConfigs)
+                lidar:Lidar = Lidar(lidarConfig)
                 lidar.connect()
                 lidar.setMotorPwm(500)
                 lidar.startScan()
@@ -60,14 +60,14 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
         
 
         if pipeline.getDataPacket(dataPacketType.translation):
-            lidar.setCurrentGlobalTranslation(pipeline.getDataPacket(dataPacketType.translation))
+            lidar.setCurrentGlobalTranslation(pipeline.getDataPacket(dataPacketType.translation).data)
         
 
 
-        for action in pipeline._getActionQue():
-            if action.function==Lidar.startScan:
+        for action in pipeline._getActionQue(): # type: ignore
+            if action.function==Lidar.startScan: # type: ignore
                 try:
-                    action.function(lidar, *action.args)
+                    action.function(lidar, *action.args) # type: ignore
                 except:
                     lidar.stop()
                     
@@ -82,14 +82,14 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
 
             
             elif action.returnType==-1:
-                action.function(lidar, *action.args)
+                action.function(lidar, *action.args) # type: ignore
             else:
-                pipeline._sendData(dataPacket(action.returnType, action.function(lidar, *action.args)))
+                pipeline._sendData(dataPacket(action.returnType, action.function(lidar, *action.args))) # type: ignore
 
         if (lidar.getLastMap()):
-            pipeline._sendMap(lidar.getLastMap())
+            pipeline._sendMap(lidar.getLastMap()) # type: ignore
         
-        pipeline._sendTrans(lidar.getCombinedTrans())
+        pipeline._sendTrans(lidar.getCombinedTrans()) # type: ignore
 
         
 

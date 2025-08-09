@@ -1,4 +1,6 @@
 import json
+from typing import Any
+import typing
 
 
 from lidarLib import lidarProtocol
@@ -10,7 +12,7 @@ from lidarLib.translation import translation
 class lidarConfigs:
 
     
-    defaultConfigs = {
+    defaultConfigs:dict[str, Any] = {
                 
         "port" : None,
         "localTrans": translation.default(),
@@ -37,41 +39,40 @@ class lidarConfigs:
     def __init__(
                     self, 
                     port:str = defaultConfigs["port"],
-                    vendorID = defaultConfigs["vendorID"],
-                    productID = defaultConfigs["productID"],
-                    serialNumber = defaultConfigs["serialNumber"],
-                    localTrans = defaultConfigs['localTrans'], 
-                    baudrate = defaultConfigs["baudrate"], 
-                    timeout=defaultConfigs["timeout"], 
-                    mode=defaultConfigs["mode"], 
-                    deadband=defaultConfigs["deadband"], 
-                    debugMode=defaultConfigs["debugMode"],
-                    isStop=defaultConfigs["isStop"], 
-                    autoStart=defaultConfigs["autoStart"], 
-                    autoConnect=defaultConfigs["autoConnect"], 
-                    defaultSpeed=defaultConfigs["defaultSpeed"],
-                    name = defaultConfigs["name"]
+                    vendorID:int = defaultConfigs["vendorID"],
+                    productID:int = defaultConfigs["productID"],
+                    serialNumber:str = defaultConfigs["serialNumber"],
+                    localTrans:translation = defaultConfigs['localTrans'], 
+                    baudrate:int = defaultConfigs["baudrate"], 
+                    timeout:int=defaultConfigs["timeout"], 
+                    mode:str=defaultConfigs["mode"], 
+                    deadband:list[float]=defaultConfigs["deadband"], 
+                    debugMode:bool=defaultConfigs["debugMode"],
+                    isStop:bool=defaultConfigs["isStop"], 
+                    autoStart:bool=defaultConfigs["autoStart"], 
+                    autoConnect:bool=defaultConfigs["autoConnect"], 
+                    defaultSpeed:int=defaultConfigs["defaultSpeed"],
+                    name:str = defaultConfigs["name"]
                     
             ):
 
 
         self.port=port
-        self.localTrans = localTrans
-        self.baudrate = baudrate
-        self.timeout=timeout
-        self.deadband=deadband
-        self.debugMode=debugMode
-        self.isStop=isStop
-        self.autoStart=autoStart
-        self.defaultSpeed = defaultSpeed
+        self.localTrans:translation = localTrans
+        self.baudrate:int = baudrate
+        self.timeout:int=timeout
+        self.deadband:list[float]=deadband
+        self.debugMode:bool=debugMode
+        self.isStop:bool=isStop
+        self.autoStart:bool=autoStart
+        self.defaultSpeed:int = defaultSpeed
 
-        self.mode=mode
-        self.autoConnect=autoConnect
-        self.deadband = deadband
-        self.vendorID=vendorID
-        self.productID = productID
-        self.serialNumber = serialNumber
-        self.name = name
+        self.mode:str=mode
+        self.autoConnect:bool=autoConnect
+        self.vendorID:int=vendorID
+        self.productID:int = productID
+        self.serialNumber:str = serialNumber
+        self.name:str = name
 
         if not self.port and not self.serialNumber:
             raise ValueError("Ether a serial number or a port must be specified in a lidar configs object")
@@ -98,13 +99,14 @@ class lidarConfigs:
             "\nname:", self.name
         )
 
-    @classmethod
-    def configsFromJson(cls:"lidarConfigs", path:str)->"lidarConfigs":
+    @classmethod # type: ignore
+    @typing.no_type_check
+    def configsFromJson(cls:"lidarConfigs", path:str)->"lidarConfigs": # type: ignore
         try:
             with open(path, 'r') as file:
-                data:dict = json.load(file)
+                data:dict[str, any] = json.load(file) # type: ignore
 
-                if data.get("type", "") != "lidarConfig":
+                if data.get("type", "") != "lidarConfig": # type: ignore
                     raise Warning(
                         "the file given does not include the correct type tag.",
                         "Please make sure to include \"type\" : \"lidarConfig\" in all lidar config files so that the library can easily differentiate them."
@@ -112,7 +114,7 @@ class lidarConfigs:
 
 
                 return cls(
-                    port = data.get("port"), 
+                    port = data.get("port"),  # type: ignore
                     vendorID = data.get("vendorID", lidarConfigs.defaultConfigs["vendorID"]),
                     productID = data.get("productID", lidarConfigs.defaultConfigs["productID"]),
                     serialNumber = data.get("serialNumber", lidarConfigs.defaultConfigs["serialNumber"]),
@@ -138,15 +140,15 @@ class lidarConfigs:
 
 
         except FileNotFoundError:
-            print(f"Error: File not found at path:", path)
-            return None
+            raise Warning(f"Error: File not found at path:", path)
+            return None 
         except json.JSONDecodeError:
-            print(f"Error: Invalid JSON format in file:", path)
+            raise Warning(f"Error: Invalid JSON format in file:", path)
             return None
 
     def writeToJson(self, path:str):
         try:
-            data = {
+            data = { # type: ignore
                 
                 "port" : self.port,
                 "localTrans": {
@@ -174,10 +176,10 @@ class lidarConfigs:
             keysToRemove = []
             for key in data.keys():
                 if data[key] == lidarConfigs.defaultConfigs[key]:
-                    keysToRemove.append(key)
+                    keysToRemove.append(key) # type: ignore
 
-            for key in keysToRemove:
-                data.pop(key)
+            for key in keysToRemove: # type: ignore
+                data.pop(key) # type: ignore
             
 
             with open(path, 'w') as file:

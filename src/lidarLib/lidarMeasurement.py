@@ -1,21 +1,20 @@
-import cmath
 import time
-from lidarLib.util import polarToX, polarToY
+from lidarLib.util import polarToX, polarToY, polarToCart
 
 class lidarMeasurement:
     """Class to handle a single lidar measurement, coordinates are normally stored in polar but may be gotten in cartesian form using the getX, getY, and getCat methods"""
-    def __init__(self, raw_bytes=None, measurement_hq=None):
+    def __init__(self, raw_bytes:bytes=None, measurement_hq=None): # type: ignore
         """
             initializes a lidar measurement using a package from the lidar
             while measurement_hq objects are accepted by this function the class is currently deprecated and should not be used
         """
         self.timeStamp=time.time()
 
-        if raw_bytes is not None:
+        if raw_bytes is not None: # type: ignore
             self.start_flag = bool(raw_bytes[0] & 0x1)
-            self.quality = raw_bytes[0] >> 2
-            self.angle = ((raw_bytes[1] >> 1) + (raw_bytes[2] << 7)) / 64.0
-            self.distance = ((raw_bytes[3] + (raw_bytes[4] << 8)) / 4.0)/1000
+            self.quality:int = raw_bytes[0] >> 2
+            self.angle:float = ((raw_bytes[1] >> 1) + (raw_bytes[2] << 7)) / 64.0
+            self.distance:float = ((raw_bytes[3] + (raw_bytes[4] << 8)) / 4.0)/1000
             
         elif measurement_hq is not None:
             self.start_flag=True if measurement_hq.start_flag==0x1 else False
@@ -24,7 +23,7 @@ class lidarMeasurement:
             self.distance= ((measurement_hq.dist_mm_q2)/4.0)/1000
 
     @classmethod
-    def default(cls, start_flag:bool, quality:int, angle:float, distance:float, isInMM=True)->"lidarMeasurement":
+    def default(cls, start_flag:bool, quality:int, angle:float, distance:float, isInMM:bool=True)->"lidarMeasurement":
         """initializes a lidarMeasurement using the values specified. this method is only intended for debugging purposes. For creating measurements from a lidar use the standard constructor"""
         new = cls()
         new.start_flag=start_flag
@@ -39,14 +38,14 @@ class lidarMeasurement:
         return new
                 
     def __str__(self):
-        data = {
+        data = { # type: ignore
             "start_flag" : self.start_flag,
             "quality" : self.quality,
             "angle" : self.angle,
             "distance" : self.distance,
             "timestamp" : self.timeStamp
         }
-        return str(data)
+        return str(data) # type: ignore
 
     def getAngle(self)->float:
         """returns the measurements angle as a float"""
@@ -66,4 +65,4 @@ class lidarMeasurement:
     
     def getCart(self)->tuple[float, float]:
         """returns the x and y of the measurement as a tuple. This value is not directly stored and is instead calculated whenever the function is called """
-        return self.polarToCart(self.distance, self.angle)
+        return polarToCart(self.distance, self.angle)

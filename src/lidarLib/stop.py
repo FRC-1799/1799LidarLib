@@ -4,10 +4,9 @@ import sys
 from lidarLib.LidarConfigs import lidarConfigs
 
 def stop(port:str):
-    config = lidarConfigs.configsFromJson(port)
-    print(config)
+    config = lidarConfigs.configsFromJson(port) # type: ignore
     config.isStop=True
-    lidar = Lidar(lidarConfigs.configsFromJson(port))
+    lidar = Lidar(lidarConfigs.configsFromJson(port)) # type: ignore
 
 
 

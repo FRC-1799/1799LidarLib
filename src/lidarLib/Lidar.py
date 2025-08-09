@@ -4,16 +4,13 @@ import time
 from lidarLib.LidarConfigs import lidarConfigs
 from lidarLib.rplidarSerial import RPlidarSerial
 from lidarLib.lidarProtocol import *
-import lidarLib.lidarProtocol
 from lidarLib.lidarMap import lidarMap
 from lidarLib.lidarMeasurement import lidarMeasurement
 import threading
 from lidarLib.translation import translation
-from typing import Callable
-import os
+from typing import Callable, Type
 
 
-#Checks if the lidar library is running on root. this check will be run once when the lidar module is first imported.
 
 
 class Lidar:
@@ -25,28 +22,27 @@ class Lidar:
             self.isStopFunction()
             return
 
-        self.lidarSerial = None
+        self.lidarSerial:RPlidarSerial = None # type: ignore
         self.measurements = None
         self.currentMap=lidarMap(self)
         self.__lastMap=lidarMap(self)
         #self.eventLoop()
         #self.deadband=deadband
         self.config = config
-        self.capsuleType=None
-        self.loop = None
+        self.capsuleType:Type[LidarScanCapsule] =None # type: ignore
+        self.loop:threading.Thread = None # type: ignore
         self.dataDescriptor=None
-        self.isDone=False
+        self.isDone:bool=False
         self.currentMotorPWM=0
         #self.debugMode=debugMode
 
-        self.capsulePrev=None
+        self.capsulePrev:LidarScanCapsule
         
-        self.scanModes=[]
-        self.typicalScanMode=None
-        self.lidarInfo=None
-        self.lidarHealth=None
-        self.lidarScan=None
-        self.sampleRate=None
+        self.scanModes:list[LidarScanMode]=[]
+        self.typicalScanMode:int=None # type: ignore
+        self.lidarInfo:LidarDeviceInfo=None # type: ignore
+        self.lidarHealth:LidarHealth=None # type: ignore
+        self.sampleRate:LidarSampleRate=None # type: ignore
 
         self.localTranslation=self.config.localTrans
         self.globalTranslation=translation.default()
@@ -70,7 +66,7 @@ class Lidar:
     def __enter__(self):
         return self
 
-    def __exit__(self, exceptionType, exceptionValue, exceptionTraceback):
+    def __exit__(self, exceptionType:None, exceptionValue:None, exceptionTraceback:None):
         self.disconnect()
 
 
@@ -119,7 +115,7 @@ class Lidar:
         """Returns wether or not the lidar is currently scanning."""
         return self.loop and self.loop.is_alive()
 
-    def __establishLoop(self, updateFunc:Callable,resetLoop=True)->None:
+    def __establishLoop(self, updateFunc:Callable[[], None], resetLoop:bool=True)->None:
         """
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE
             Establishes the update loop thread as well as fetching a scan descriptor
@@ -132,20 +128,20 @@ class Lidar:
             self.loop = threading.Thread(target=self.__updateLoop, daemon=True)
             self.loop.start()
 
-    def disconnect(self, leaveRunning=False)->None:
+    def disconnect(self, leaveRunning:bool=False)->None:
         """
             Disconnects the lidar from a connected port
             Before disconnecting the function will stop the lidar motor and scan(if applicable) unless leaveRunning is set to true
         """
 
-        if self.lidarSerial is not None:
+        if self.lidarSerial is not None: # type: ignore
             self.isDone=True
             if not leaveRunning:
                 self.stop()
                 self.setMotorPwm(0)
             self.lidarSerial.close()
             
-            self.lidarSerial = None
+            self.lidarSerial = None # type: ignore
             print("PyRPlidar Info : device is disconnected")
 
     def __updateLoop(self)->None:
@@ -175,7 +171,7 @@ class Lidar:
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE
             placeholder function, update is revalued whenever a scan is started so this code should never run. for more information see __standardUpdate or __expressUpdate
         """
-        raise RPlidarProtocolError("Update was called without a valid connection established, this may because a user tried to call it")
+        raise LidarProtocolError("Update was called without a valid connection established, this may because a user tried to call it")
 
 
     def __standardUpdate(self)->None:
@@ -186,13 +182,13 @@ class Lidar:
         
         while not self.isDone:
             #print(self.lidarSerial.bufferSize())
-            if self.dataDescriptor and (self.lidarSerial.bufferSize()>=self.dataDescriptor.data_length):
+            if self.dataDescriptor and (self.lidarSerial.bufferSize()>=self.dataDescriptor.dataLength):
                 #print("update working")
                 newData=self.__receiveData(self.dataDescriptor)
                 if not self.__validatePackage(newData, printErrors=self.config.debugMode):
                     self.__restartScan()
                     return
-                self.currentMap.addVal(lidarMeasurement(newData), self.combinedTranslation, printFlag=self.config.debugMode)
+                self.currentMap.addVal(lidarMeasurement(newData), self.combinedTranslation)
             else:
                 #print("break hit")
                 break
@@ -207,22 +203,22 @@ class Lidar:
             since the express scan is currently deprecated in this library this function should never be called
         """
 
-        while not self.capsulePrev:
-            if self.dataDescriptor and (self.lidarSerial.bufferSize()>=self.dataDescriptor.data_length):
+        while not self.capsulePrev:  # type: ignore
+            if self.dataDescriptor and (self.lidarSerial.bufferSize()>=self.dataDescriptor.dataLength):
 
                 self.capsulePrev = self.capsuleType(self.__receiveData(self.dataDescriptor))
         
         while not self.isDone:
             #print("update")
             #print(self.dataDescriptor, self.lidarSerial.bufferSize())
-            if self.dataDescriptor and (self.lidarSerial.bufferSize()>=self.dataDescriptor.data_length):
+            if self.dataDescriptor and (self.lidarSerial.bufferSize()>=self.dataDescriptor.dataLength):
                 #print("data read")
                 data = self.__receiveData(self.dataDescriptor)
                 capsule_current = self.capsuleType(data)
                 
-                nodes = self.capsuleType._parse_capsule(self.capsulePrev, capsule_current)
+                nodes = self.capsuleType._parseCapsule(self.capsulePrev, capsule_current) # type: ignore
                 for index, node in enumerate(nodes):
-                        self.currentMap.addVal(lidarMeasurement(raw_bytes=None, measurement_hq=node), self.combinedTranslation, printFlag=True)
+                        self.currentMap.addVal(lidarMeasurement(raw_bytes=None, measurement_hq=node), self.combinedTranslation) # type: ignore
 
                 self.capsulePrev = capsule_current
             else:
@@ -233,10 +229,10 @@ class Lidar:
                 
 
 
-    def __validatePackage(self, pack:bytes, printErrors=False)->bool:
+    def __validatePackage(self, pack:bytes, printErrors:bool=False)->bool:
         """Takes a 5 length byte pack response to a standard or forced scan and returns wether or not that scan has all of the correct checksums(and some other checks for legitimacy)"""
         startFlag = bool(pack[0] & 0x1)
-        quality = pack[0] >> 2
+        quality = pack[0] >> 2 # type: ignore
         angle = ((pack[1] >> 1) + (pack[2] << 7)) / 64.0
         distance = (pack[3] + (pack[4] << 8)) / 4.0
 
@@ -269,55 +265,55 @@ class Lidar:
         
 
 
-    def __sendCommand(self, cmd:bytes, payload=None)->None:
+    def __sendCommand(self, cmd:bytes, payload:bytes=None)->None: # type: ignore
         """
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE.
             sends the specified command over the serial bus. throws an RPlidarConnectionError if no serial bus is connected.
         """
-        if self.lidarSerial == None:
-            raise RPlidarConnectionError("PyRPlidar Error : device is not connected")
+        if self.lidarSerial == None: # type: ignore
+            raise LidarConnectionError("PyRPlidar Error : device is not connected")
 
-        self.lidarSerial.sendData(RPlidarCommand(cmd, payload).raw_bytes)
+        self.lidarSerial.sendData(LidarCommand(cmd, payload).rawBytes)
 
-    def __receiveDescriptor(self)->RPlidarResponse:
+    def __receiveDescriptor(self)->LidarResponse:
         """
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE.
             Receives but does not save a rplidar scan descriptor. Assumes that the descriptor is the first thing in the bus and will otherwise throw an error.
         """
-        if self.lidarSerial == None:
-            raise RPlidarConnectionError("PyRPlidar Error : device is not connected")
+        if self.lidarSerial == None: # type: ignore
+            raise LidarConnectionError("PyRPlidar Error : device is not connected")
         
         count=0
         while self.lidarSerial.bufferSize()<7:
             sleep(0.001)
             count+=0.001
             if count>10:
-                raise RPlidarConnectionError("did not receive connection response from RPlidar:", self.config.name)
+                raise LidarConnectionError("did not receive connection response from RPlidar:", self.config.name)
 
 
-        descriptor = RPlidarResponse(self.lidarSerial.receiveData(RPLIDAR_DESCRIPTOR_LEN))
+        descriptor = LidarResponse(self.lidarSerial.receiveData(RPLIDAR_DESCRIPTOR_LEN))
         
-        if descriptor.sync_byte1 != RPLIDAR_SYNC_BYTE1[0] or descriptor.sync_byte2 != RPLIDAR_SYNC_BYTE2[0]:
-            raise RPlidarProtocolError("PyRPlidar Error : sync bytes are mismatched", hex(descriptor.sync_byte1), hex(descriptor.sync_byte2))
+        if descriptor.syncByte1 != RPLIDAR_SYNC_BYTE1[0] or descriptor.syncByte2 != RPLIDAR_SYNC_BYTE2[0]:
+            raise LidarProtocolError("PyRPlidar Error : sync bytes are mismatched", hex(descriptor.syncByte1), hex(descriptor.syncByte2))
 
         return descriptor
 
-    def __receiveData(self, descriptor:RPlidarResponse, waitTime=0)->bytes:
+    def __receiveData(self, descriptor:LidarResponse, waitTime:int=0)->bytes:
         """
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE.
             Fetches a package from the lidar using the entered descriptor as a guide. Will return none if the buffer doesn't contain enough data.
         """
-        if self.lidarSerial == None:
-            raise RPlidarConnectionError("PyRPlidar Error : device is not connected")
+        if self.lidarSerial == None: # type: ignore
+            raise LidarConnectionError("PyRPlidar Error : device is not connected")
         count=0
         
-        while self.lidarSerial.bufferSize()<descriptor.data_length:
+        while self.lidarSerial.bufferSize()<descriptor.dataLength:
             sleep(0.001)
             count+=0.001
             if count>waitTime:
-                return None
+                return None # type: ignore
             
-        return self.lidarSerial.receiveData(descriptor.data_length)
+        return self.lidarSerial.receiveData(descriptor.dataLength)
         
 
 
@@ -331,7 +327,7 @@ class Lidar:
         self.__sendCommand(RPLIDAR_CMD_RESET)
 
 
-    def setMotorPwm(self, pwm:int, overrideInternalValue=True)->None:
+    def setMotorPwm(self, pwm:int, overrideInternalValue:bool=True)->None:
         """Sets the lidar's motor to the specified pwm value. the speed must be a positive number or 0 and lower or equal to the specified max value(currently 1023)"""
         if pwm<0 or pwm>RPLIDAR_MAX_MOTOR_PWM:
             raise ValueError("lidar pwm was set to a value not within the range: ",pwm)
@@ -357,12 +353,12 @@ class Lidar:
         self.__sendCommand(RPLIDAR_CMD_GET_INFO)
         descriptor = self.__receiveDescriptor()
         data = self.__receiveData(descriptor, 1)
-        if data==None:
+        if data==None: # type: ignore
             raise RuntimeError("Could not fetch info from the lidar")
-        self.lidarInfo = RPlidarDeviceInfo(data)
+        self.lidarInfo = LidarDeviceInfo(data)
 
 
-    def getInfo(self)->RPlidarDeviceInfo:
+    def getInfo(self)->LidarDeviceInfo:
         """
             Returns the connected lidar's info in the form of a RPlidarDeviceInfo object.
             Due to technical limitations this function returns data cached when the lidar was most recently connected.
@@ -374,7 +370,7 @@ class Lidar:
 
 
 
-    def __getHealth(self)->RPlidarHealth:
+    def __getHealth(self)->None:
         """
             Fetches and saves the connected lidar's health in the form of a RPlidarDeviceHealth object. 
             This function should be called once when the lidar is first connected and never again.
@@ -383,11 +379,11 @@ class Lidar:
         self.__sendCommand(RPLIDAR_CMD_GET_HEALTH)
         descriptor = self.__receiveDescriptor()
         data = self.__receiveData(descriptor, 1)
-        if data==None:
+        if data==None: # type: ignore
             raise RuntimeError("Could not get health data from the lidar")
-        self.lidarHealth = RPlidarHealth(data)
+        self.lidarHealth = LidarHealth(data)
 
-    def getHealth(self)->RPlidarHealth:
+    def getHealth(self)->LidarHealth:
         """
             Returns the connected lidar's health in the form of a RPlidarDeviceHealth object.
             Due to technical limitations this function returns data cached when the lidar was most recently connected.
@@ -405,11 +401,11 @@ class Lidar:
         self.__sendCommand(RPLIDAR_CMD_GET_SAMPLERATE)
         descriptor = self.__receiveDescriptor()
         data = self.__receiveData(descriptor,1)
-        if data==None:
+        if data==None: # type: ignore
             raise RuntimeError("Could not get sample rate from the lidar")
-        self.sampleRate = RPlidarSampleRate(data)
+        self.sampleRate = LidarSampleRate(data)
 
-    def getSampleRate(self)->RPlidarSampleRate:
+    def getSampleRate(self)->LidarSampleRate:
         """
             Fetches and returns the connected lidar's sample rates for both standard and express modes. 
             The measurements are in microseconds per reading. the data is returned in the form of a RPlidarSampleRateObject.
@@ -420,7 +416,7 @@ class Lidar:
             raise ValueError("Lidar sample rate can not be fetched before the lidar has been connected")
         return self.sampleRate
 
-    def __getLidarConf(self, payload:struct)->bytes:
+    def __getLidarConf(self, payload:bytes)->bytes:
         """
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE
             Fetches and returns the connected lidar's current configuration and returns it as a pack of bytes
@@ -429,7 +425,7 @@ class Lidar:
         self.__sendCommand(RPLIDAR_CMD_GET_LIDAR_CONF, payload)
         descriptor = self.__receiveDescriptor()
         data = self.__receiveData(descriptor, 1)
-        if data==None:
+        if data==None: # type: ignore
             raise RuntimeError("Could not get config data from the lidar")
         return data
 
@@ -484,7 +480,7 @@ class Lidar:
         """
         
         for mode in range(self.getScanModeCount()):
-            scan_mode = RPlidarScanMode(
+            scan_mode = LidarScanMode(
                             self.__getLidarConf(struct.pack("<IH", RPLIDAR_CONF_SCAN_MODE_NAME, mode)),
                             self.__getLidarConf(struct.pack("<IH", RPLIDAR_CONF_SCAN_MODE_MAX_DISTANCE, mode)),
                             self.__getLidarConf(struct.pack("<IH", RPLIDAR_CONF_SCAN_MODE_US_PER_SAMPLE, mode)),
@@ -494,7 +490,7 @@ class Lidar:
         
         
     
-    def getScanModes(self)->list[RPlidarScanMode]:
+    def getScanModes(self)->list[LidarScanMode]:
         """
             Returns a list of RPlidarScanMode objects for each scan mode supported by the current connected lidar.
             Due to technical limitations this function returns data cached when the lidar was most recently connected.
@@ -537,7 +533,7 @@ class Lidar:
         self.lidarSerial.receiveData(RPLIDAR_DESCRIPTOR_LEN)
     
 
-    def startScanExpress(self, mode:int = "auto"):
+    def startScanExpress(self, mode:int = "auto"): # type: ignore
         """
             Starts a scan in express mode (using a compression format so that more samples may be handled per second).
             If a mode is specified then the lidar will attempt to start express in given mode. 
@@ -549,7 +545,7 @@ class Lidar:
             raise RuntimeError("Attempted to start a scan on lidar", self.config.name,
                                 "while a scan was already running. Please stop a scan before starting another one as running 2 at once can cause issues.")
 
-        if mode == "auto":
+        if mode == "auto": # type: ignore
             mode = self.getScanModeTypical()
 
         if mode not in range(0,5):
@@ -562,14 +558,14 @@ class Lidar:
 
         self.__establishLoop(self.__capsuleUpdate)
 
-        if self.dataDescriptor.data_type == 0x82:
-            self.capsuleType = PyRPlidarScanCapsule
-        elif self.dataDescriptor.data_type == 0x84:
-            self.capsuleType = PyRPlidarScanUltraCapsule
-        elif self.dataDescriptor.data_type == 0x85:
-            self.capsuleType = PyRPlidarScanDenseCapsule
+        if self.dataDescriptor.dataType == 0x82:
+            self.capsuleType = LidarScanCapsule
+        elif self.dataDescriptor.dataType == 0x84:
+            self.capsuleType = LidarScanUltraCapsule # type: ignore
+        elif self.dataDescriptor.dataType == 0x85:
+            self.capsuleType = LidarScanDenseCapsule # type: ignore
         else:
-            raise RPlidarProtocolError("RPlidar Error : scan data type is not supported")
+            raise LidarProtocolError("RPlidar Error : scan data type is not supported")
         
 
     def isConnected(self)->bool:
@@ -618,7 +614,7 @@ class Lidar:
         self.combinedTranslation=self.globalTranslation.combineTranslation(self.localTranslation)
 
 
-    def setDeadband(self, deadband:list[int])->None:
+    def setDeadband(self, deadband:list[float])->None:
         """
             Sets a deadband of angles that will be dropped by the lidar. The dropped angle is calculated after the local translation but before the global translation. 
             The imputed argument should be a list of ints in which the first argument is the start of the deadband and the second is the end. 

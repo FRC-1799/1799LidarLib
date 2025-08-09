@@ -1,8 +1,7 @@
 import struct
 import codecs
-import math
 
-from numpy import byte
+
 
 
 RPLIDAR_SYNC_BYTE1 = b'\xA5'
@@ -81,26 +80,26 @@ VBS_TARGET_BASE = [(0x1 << RPLIDAR_VARBITSCALE_X16_SRC_BIT),
 
 
 
-class RPlidarConnectionError(Exception):
+class LidarConnectionError(Exception):
     pass
 
-class RPlidarProtocolError(Exception):
+class LidarProtocolError(Exception):
     pass
 
 
 
-class RPlidarCommand:
+class LidarCommand:
     """class to encapsulate a command sent to the lidar"""
-    def __init__(self, cmd:byte, payload=None):
+    def __init__(self, cmd:bytes, payload:bytes=None): # type: ignore
         """Creates a rplidar command of type cmd. payload will be sent if set for commands that require extra information """
         self.cmd = cmd
         self.payload = payload
-        self.raw_bytes = RPLIDAR_SYNC_BYTE1 + cmd
+        self.rawBytes = RPLIDAR_SYNC_BYTE1 + cmd
         
-        if payload is not None:
+        if payload is not None: # type: ignore
             size = struct.pack('B', len(payload))
-            self.raw_bytes += size + payload
-            self.raw_bytes += struct.pack('B', self.getChecksum(self.raw_bytes))
+            self.rawBytes += size + payload
+            self.rawBytes += struct.pack('B', self.getChecksum(self.rawBytes))
 
     def getChecksum(self, data:bytes):
         """returns the checksum of the packet entered"""
@@ -109,56 +108,56 @@ class RPlidarCommand:
         return checkSum
 
 
-class RPlidarResponse:
+class LidarResponse:
     """Class to define scan metadata information returned by the lidar"""
     
     def __init__(self, rawBytes:bytes):
         """creates a rplidarResponse from the raw bytes returned by the lidar"""
-        self.sync_byte1 = rawBytes[0]
-        self.sync_byte2 = rawBytes[1]
-        size_q30_length_type = struct.unpack("<L", rawBytes[2:6])[0]
-        self.data_length = size_q30_length_type & 0x3FFFFFFF
-        self.send_mode = size_q30_length_type >> 30
-        self.data_type = rawBytes[6]
+        self.syncByte1 = rawBytes[0]
+        self.syncByte2 = rawBytes[1]
+        sizeQ30LengthType = struct.unpack("<L", rawBytes[2:6])[0]
+        self.dataLength = sizeQ30LengthType & 0x3FFFFFFF
+        self.sendMode = sizeQ30LengthType >> 30
+        self.dataType = rawBytes[6]
 
     def __str__(self):
-        data = {
-            "sync_byte1" : hex(self.sync_byte1),
-            "sync_byte2" : hex(self.sync_byte2),
-            "data_length" : self.data_length,
-            "send_mode" : self.send_mode,
-            "data_type" : hex(self.data_type),
+        data = { # type: ignore
+            "syncByte1" : hex(self.syncByte1),
+            "syncByte2" : hex(self.syncByte2),
+            "dataLength" : self.dataLength,
+            "sendMode" : self.sendMode,
+            "dataType" : hex(self.dataType),
         }
-        return str(data)
+        return str(data) # type: ignore
 
 
 
 
 
 
-class RPlidarDeviceInfo:
+class LidarDeviceInfo:
     """Class to handle and store device information given by the lidar"""
     def __init__(self, rawBytes:bytes):
         """creates device info object from the raw bytes returned by the lidar"""
         self.model = rawBytes[0]
-        self.firmware_minor = rawBytes[1]
-        self.firmware_major = rawBytes[2]
+        self.firmwareMinor = rawBytes[1]
+        self.firmwareMajor = rawBytes[2]
         self.hardware = rawBytes[3]
         self.serialNumber = codecs.encode(rawBytes[4:], 'hex').upper()
         self.serialNumber = codecs.decode(self.serialNumber, 'ascii')
 
     def __str__(self):
-        data = {
+        data = { # type: ignore
             "model" : self.model,
-            "firmware_minor" : self.firmware_minor,
-            "firmware_major" : self.firmware_major,
+            "firmwareMinor" : self.firmwareMinor,
+            "firmwareMajor" : self.firmwareMajor,
             "hardware" : self.hardware,
             "serialNumber" : self.serialNumber
         }
-        return str(data)
+        return str(data) # type: ignore
 
 
-class RPlidarHealth:
+class LidarHealth:
     """class to handle and store health information given by the lidar"""
     def __init__(self, rawBytes:bytes):
         """creates a lidar health object from the raw byte package returned by the lidar"""
@@ -173,22 +172,22 @@ class RPlidarHealth:
         return str(data)
 
 
-class RPlidarSampleRate:
+class LidarSampleRate:
     """Class to handle and store sampleRate information given by the lidar"""
     def __init__(self, rawBytes:bytes):
         """creates a lidar sampleRate object from the raw byte package returned by the lidar"""
-        self.t_standard = rawBytes[0] + (rawBytes[1] << 8)
-        self.t_express = rawBytes[2] + (rawBytes[3] << 8)
+        self.typeStandard = rawBytes[0] + (rawBytes[1] << 8)
+        self.typeExpress = rawBytes[2] + (rawBytes[3] << 8)
     
     def __str__(self):
         data = {
-            "t_standard" : self.t_standard,
-            "t_express" : self.t_express
+            "t_standard" : self.typeStandard,
+            "t_express" : self.typeExpress
         }
         return str(data)
 
 
-class RPlidarScanMode:
+class LidarScanMode:
     """Class to handle and store a scan mode given by the lidar"""
     def __init__(self, dataName:bytes, dataMaxDistance:bytes, dataUsPerSample:bytes, dataAnsType:bytes):
         """Creates a scan mode using the byte packs returned by the lidar"""
@@ -198,101 +197,101 @@ class RPlidarScanMode:
         self.name = codecs.decode(dataName[4:-1], 'ascii')
     
     def __str__(self):
-        data = {
+        data = { # type: ignore
             "name" : self.name,
             "max_distance" : self.maxDistance,
             "us_per_sample" : self.usPerSample,
             "ans_type" : RPLIDAR_ANS_TYPE[self.ansType]
         }
-        return str(data)
+        return str(data) # type: ignore
 
 
 
 
 
 # @DeprecationWarning
-class PyRPlidarMeasurementHQ:
+class LidarMeasurementHQ:
     
-    def __init__(self, syncBit, angle_q6, dist_q2):
+    def __init__(self, syncBit:int, angleQ6:int, distQ2:int):
         self.start_flag = syncBit | ((not syncBit) << 1)
-        self.quality = (0x2f << 2) if dist_q2 else 0
-        self.angle_z_q14 = (angle_q6 << 8) // 90
-        self.dist_mm_q2 = dist_q2
+        self.quality = (0x2f << 2) if distQ2 else 0
+        self.angle_z_q14:float = (angleQ6 << 8) // 90
+        self.dist_mm_q2:float = distQ2
 
-    def get_angle(self):
+    def getAngle(self):
         return self.angle_z_q14 * 90.0 / 16384.0
     
-    def get_distance(self):
+    def getDistance(self):
         return self.dist_mm_q2 / 4.0
 
 
 
 # @DeprecationWarning
-class PyRPlidarCabin:
+class LidarCabin:
     
-    def __init__(self, raw_bytes):
-        self.distance1 = (raw_bytes[0] >> 2) + (raw_bytes[1] << 6)
-        self.distance2 = (raw_bytes[2] >> 2) + (raw_bytes[3] << 6)
-        self.d_theta1 = (raw_bytes[4] & 0x0F) + ((raw_bytes[0] & 0x03) << 4)
-        self.d_theta2 = (raw_bytes[4] >> 4) + ((raw_bytes[2] & 0x03) << 4)
+    def __init__(self, rawBytes:bytes):
+        self.distance1 = (rawBytes[0] >> 2) + (rawBytes[1] << 6)
+        self.distance2 = (rawBytes[2] >> 2) + (rawBytes[3] << 6)
+        self.d_theta1 = (rawBytes[4] & 0x0F) + ((rawBytes[0] & 0x03) << 4)
+        self.d_theta2 = (rawBytes[4] >> 4) + ((rawBytes[2] & 0x03) << 4)
 
 # @DeprecationWarning
-class PyRPlidarScanCapsule:
+class LidarScanCapsule:
     
-    def __init__(self, raw_bytes):
-        self.sync_byte1 = (raw_bytes[0] >> 4) & 0xF
-        self.sync_byte2 = (raw_bytes[1] >> 4) & 0xF
-        self.checksum = (raw_bytes[0] & 0xF) + ((raw_bytes[1] & 0xF) << 4)
-        self.start_angle_q6 = raw_bytes[2] + ((raw_bytes[3] & 0x7F) << 8)
-        self.start_flag = bool((raw_bytes[3] >> 7) & 0x1)
+    def __init__(self, rawBytes:bytes):
+        self.syncByte1 = (rawBytes[0] >> 4) & 0xF
+        self.syncByte2 = (rawBytes[1] >> 4) & 0xF
+        self.checksum = (rawBytes[0] & 0xF) + ((rawBytes[1] & 0xF) << 4)
+        self.startAngleQ6 = rawBytes[2] + ((rawBytes[3] & 0x7F) << 8)
+        self.startFlag = bool((rawBytes[3] >> 7) & 0x1)
         self.cabins = list(map(
-                               PyRPlidarCabin,
-                               [raw_bytes[i:i+5] for i in range(4, len(raw_bytes), 5)]
+                               LidarCabin,
+                               [rawBytes[i:i+5] for i in range(4, len(rawBytes), 5)]
                                ))
 
     @classmethod
-    def _parse_capsule(self, capsule_prev, capsule_current):
+    def _parseCapsule(cls, capsulePrev:"LidarScanCapsule", capsuleCurrent:"LidarScanCapsule")->list[LidarMeasurementHQ]:
         
-        nodes = []
+        nodes:list[LidarMeasurementHQ] = []
         
-        currentStartAngle_q8 = capsule_current.start_angle_q6 << 2
-        prevStartAngle_q8 = capsule_prev.start_angle_q6 << 2
+        currentStartAngleQ8 = capsuleCurrent.startAngleQ6 << 2
+        prevStartAngleQ8 = capsulePrev.startAngleQ6 << 2
         
-        diffAngle_q8 = (currentStartAngle_q8)-(prevStartAngle_q8)
-        if prevStartAngle_q8 > currentStartAngle_q8:
-            diffAngle_q8 += (360 << 8)
+        diffAngleQ8 = (currentStartAngleQ8)-(prevStartAngleQ8)
+        if prevStartAngleQ8 > currentStartAngleQ8:
+            diffAngleQ8 += (360 << 8)
         
-        angleInc_q16 = (diffAngle_q8 << 3)
-        currentAngle_raw_q16 = (prevStartAngle_q8 << 8)
+        angleIncQ16 = (diffAngleQ8 << 3)
+        currentAngleRawQ16 = (prevStartAngleQ8 << 8)
 
-        for pos in range(len(capsule_prev.cabins)):
+        for pos in range(len(capsulePrev.cabins)):
             
-            dist_q2 = [0] * 2
-            angle_q6 = [0] * 2
+            distQ2 = [0] * 2
+            angleQ6 = [0] * 2
             syncBit = [0] * 2
             
-            dist_q2[0] = capsule_prev.cabins[pos].distance1 << 2
-            dist_q2[1] = capsule_prev.cabins[pos].distance2 << 2
+            distQ2[0] = capsulePrev.cabins[pos].distance1 << 2
+            distQ2[1] = capsulePrev.cabins[pos].distance2 << 2
             
-            angle_offset1_q3 = capsule_prev.cabins[pos].d_theta1
-            angle_offset2_q3 = capsule_prev.cabins[pos].d_theta2
+            angleOffset1Q3 = capsulePrev.cabins[pos].d_theta1
+            angleOffset2Q3 = capsulePrev.cabins[pos].d_theta2
             
-            angle_q6[0] = ((currentAngle_raw_q16 - (angle_offset1_q3<<13))>>10)
-            syncBit[0] = 1 if ((currentAngle_raw_q16 + angleInc_q16) % (360<<16)) < angleInc_q16 else 0
-            currentAngle_raw_q16 += angleInc_q16
+            angleQ6[0] = ((currentAngleRawQ16 - (angleOffset1Q3<<13))>>10)
+            syncBit[0] = 1 if ((currentAngleRawQ16 + angleIncQ16) % (360<<16)) < angleIncQ16 else 0
+            currentAngleRawQ16 += angleIncQ16
             
             
-            angle_q6[1] = ((currentAngle_raw_q16 - (angle_offset2_q3<<13))>>10)
-            syncBit[1] = 1 if ((currentAngle_raw_q16 + angleInc_q16) % (360<<16)) < angleInc_q16 else 0
-            currentAngle_raw_q16 += angleInc_q16
+            angleQ6[1] = ((currentAngleRawQ16 - (angleOffset2Q3<<13))>>10)
+            syncBit[1] = 1 if ((currentAngleRawQ16 + angleIncQ16) % (360<<16)) < angleIncQ16 else 0
+            currentAngleRawQ16 += angleIncQ16
 
             
             for cpos in range(2):
 
-                if angle_q6[cpos] < 0: angle_q6[cpos] += (360 << 6)
-                if angle_q6[cpos] >= (360 << 6): angle_q6[cpos] -= (360 << 6)
+                if angleQ6[cpos] < 0: angleQ6[cpos] += (360 << 6)
+                if angleQ6[cpos] >= (360 << 6): angleQ6[cpos] -= (360 << 6)
                 
-                node = PyRPlidarMeasurementHQ(syncBit[cpos], angle_q6[cpos], dist_q2[cpos])
+                node = LidarMeasurementHQ(syncBit[cpos], angleQ6[cpos], distQ2[cpos])
                 nodes.append(node)
 
         return nodes
@@ -302,56 +301,56 @@ class PyRPlidarScanCapsule:
 
 
 # @DeprecationWarning
-class PyRPlidarDenseCabin:
+class LidarDenseCabin:
     
-    def __init__(self, raw_bytes):
-        self.distance = (raw_bytes[0] << 8) + raw_bytes[1]
+    def __init__(self, rawBytes:bytes):
+        self.distance = (rawBytes[0] << 8) + rawBytes[1]
 
 # @DeprecationWarning
-class PyRPlidarScanDenseCapsule:
+class LidarScanDenseCapsule:
 
-    def __init__(self, raw_bytes):
-        self.sync_byte1 = (raw_bytes[0] >> 4) & 0xF
-        self.sync_byte2 = (raw_bytes[1] >> 4) & 0xF
-        self.checksum = (raw_bytes[0] & 0xF) + ((raw_bytes[1] & 0xF) << 4)
-        self.start_angle_q6 = raw_bytes[2] + ((raw_bytes[3] & 0x7F) << 8)
-        self.start_flag = bool((raw_bytes[3] >> 7) & 0x1)
+    def __init__(self, rawBytes:bytes):
+        self.syncByte1 = (rawBytes[0] >> 4) & 0xF
+        self.syncByte2 = (rawBytes[1] >> 4) & 0xF
+        self.checksum = (rawBytes[0] & 0xF) + ((rawBytes[1] & 0xF) << 4)
+        self.startAngleQ6 = rawBytes[2] + ((rawBytes[3] & 0x7F) << 8)
+        self.startFlag = bool((rawBytes[3] >> 7) & 0x1)
         self.cabins = list(map(
-                               PyRPlidarDenseCabin,
-                               [raw_bytes[i:i+2] for i in range(4, len(raw_bytes), 2)]
+                               LidarDenseCabin,
+                               [rawBytes[i:i+2] for i in range(4, len(rawBytes), 2)]
                                ))
 
     @classmethod
-    def _parse_capsule(self, capsule_prev, capsule_current):
+    def _parseCapsule(cls, capsulePrev:"LidarScanDenseCapsule", capsuleCurrent:"LidarScanDenseCapsule"):
         
-        nodes = []
+        nodes:list[LidarMeasurementHQ] = []
         
-        currentStartAngle_q8 = capsule_current.start_angle_q6 << 2
-        prevStartAngle_q8 = capsule_prev.start_angle_q6 << 2
+        currentStartAngleQ8 = capsuleCurrent.startAngleQ6 << 2
+        prevStartAngleQ8 = capsulePrev.startAngleQ6 << 2
         
-        diffAngle_q8 = (currentStartAngle_q8)-(prevStartAngle_q8)
-        if prevStartAngle_q8 > currentStartAngle_q8:
-            diffAngle_q8 += (360 << 8)
+        diffAngleQ8 = (currentStartAngleQ8)-(prevStartAngleQ8)
+        if prevStartAngleQ8 > currentStartAngleQ8:
+            diffAngleQ8 += (360 << 8)
         
-        angleInc_q16 = (diffAngle_q8 << 8) // 40
-        currentAngle_raw_q16 = (prevStartAngle_q8 << 8)
+        angleIncQ16 = (diffAngleQ8 << 8) // 40
+        currentAngleRawQ16 = (prevStartAngleQ8 << 8)
 
-        for pos in range(len(capsule_prev.cabins)):
+        for pos in range(len(capsulePrev.cabins)):
             
-            dist_q2 = 0
-            angle_q6 = 0
+            distQ2 = 0
+            angleQ6 = 0
             syncBit = 0
 
-            syncBit = 1 if (((currentAngle_raw_q16 + angleInc_q16) % (360 << 16)) < angleInc_q16) else 0
+            syncBit = 1 if (((currentAngleRawQ16 + angleIncQ16) % (360 << 16)) < angleIncQ16) else 0
             
-            angle_q6 = (currentAngle_raw_q16 >> 10)
-            if angle_q6 < 0: angle_q6 += (360 << 6)
-            if angle_q6 >= (360 << 6): angle_q6 -= (360 << 6)
-            currentAngle_raw_q16 += angleInc_q16
+            angleQ6 = (currentAngleRawQ16 >> 10)
+            if angleQ6 < 0: angleQ6 += (360 << 6)
+            if angleQ6 >= (360 << 6): angleQ6 -= (360 << 6)
+            currentAngleRawQ16 += angleIncQ16
             
-            dist_q2 = capsule_prev.cabins[pos].distance << 2
+            distQ2 = capsulePrev.cabins[pos].distance << 2
 
-            node = PyRPlidarMeasurementHQ(syncBit, angle_q6, dist_q2)
+            node = LidarMeasurementHQ(syncBit, angleQ6, distQ2)
             nodes.append(node)
 
         return nodes
@@ -361,12 +360,12 @@ class PyRPlidarScanDenseCapsule:
 
 
 # @DeprecationWarning
-class PyRPlidarUltraCabin:
+class LidarUltraCabin:
     
-    def __init__(self, raw_bytes):
-        self.major = ((int(raw_bytes[1]) & 0xF) << 8) + int(raw_bytes[0])
-        self.predict1 = ((int(raw_bytes[2]) & 0x3F) << 4) + ((int(raw_bytes[1]) >> 4) & 0xF)
-        self.predict2 = ((int(raw_bytes[3]) & 0xFF) << 2) + ((int(raw_bytes[2]) >> 6) & 0x3)
+    def __init__(self, rawBytes:bytes):
+        self.major = ((int(rawBytes[1]) & 0xF) << 8) + int(rawBytes[0])
+        self.predict1 = ((int(rawBytes[2]) & 0x3F) << 4) + ((int(rawBytes[1]) >> 4) & 0xF)
+        self.predict2 = ((int(rawBytes[3]) & 0xFF) << 2) + ((int(rawBytes[2]) >> 6) & 0x3)
     
         if self.predict1 & 0x200: self.predict1 |= 0xFFFFFC00
         if self.predict2 & 0x200: self.predict2 |= 0xFFFFFC00
@@ -379,33 +378,33 @@ class PyRPlidarUltraCabin:
         }
         return str(data)
 # @DeprecationWarning
-class PyRPlidarScanUltraCapsule:
+class LidarScanUltraCapsule:
 
-    def __init__(self, raw_bytes):
-        self.sync_byte1 = (raw_bytes[0] >> 4) & 0xF
-        self.sync_byte2 = (raw_bytes[1] >> 4) & 0xF
-        self.checksum = (raw_bytes[0] & 0xF) + ((raw_bytes[1] & 0xF) << 4)
-        self.start_angle_q6 = raw_bytes[2] + ((raw_bytes[3] & 0x7F) << 8)
-        self.start_flag = bool((raw_bytes[3] >> 7) & 0x1)
-        self.ultra_cabins = list(map(
-                                     PyRPlidarUltraCabin,
-                                     [raw_bytes[i:i+4] for i in range(4, len(raw_bytes), 4)]
+    def __init__(self, rawBytes:bytes):
+        self.syncByte1 = (rawBytes[0] >> 4) & 0xF
+        self.syncByte2 = (rawBytes[1] >> 4) & 0xF
+        self.checksum = (rawBytes[0] & 0xF) + ((rawBytes[1] & 0xF) << 4)
+        self.startAngleQ6 = rawBytes[2] + ((rawBytes[3] & 0x7F) << 8)
+        self.startFlag = bool((rawBytes[3] >> 7) & 0x1)
+        self.ultraCabins = list(map(
+                                     LidarUltraCabin,
+                                     [rawBytes[i:i+4] for i in range(4, len(rawBytes), 4)]
                                      ))
     
 
     def __str__(self):
-        data = {
-            "sync_byte1" : hex(self.sync_byte1),
-            "sync_byte2" : hex(self.sync_byte2),
+        data = { # type: ignore
+            "syncByte1" : hex(self.syncByte1),
+            "syncByte2" : hex(self.syncByte2),
             "checksum" : hex(self.checksum),
-            "start_angle_q6" : hex(self.start_angle_q6),
-            "start_flag" : self.start_flag,
-            "ultra_cabins" : [str(ultra_cabin) for ultra_cabin in self.ultra_cabins]
+            "startAngleQ6" : hex(self.startAngleQ6),
+            "startFlag" : self.startFlag,
+            "ultraCabins" : [str(ultra_cabin) for ultra_cabin in self.ultraCabins]
         }
-        return str(data)
+        return str(data) # type: ignore
 
     @classmethod
-    def _varbitscale_decode(self, scaled):
+    def _varbitscaleDecode(cls, scaled:int):
         
         scaleLevel = 0
         
@@ -419,89 +418,89 @@ class PyRPlidarScanUltraCapsule:
         return (0, scaleLevel)
 
     @classmethod
-    def _parse_capsule(self, capsule_prev, capsule_current):
+    def _parseCapsule(cls, capsulePrev:"LidarScanUltraCapsule", capsuleCurrent:"LidarScanUltraCapsule"):
         
-        nodes = []
+        nodes:list[LidarMeasurementHQ] = []
         
-        currentStartAngle_q8 = capsule_current.start_angle_q6 << 2
-        prevStartAngle_q8 = capsule_prev.start_angle_q6 << 2
+        currentStartAngleQ8 = capsuleCurrent.startAngleQ6 << 2
+        prevStartAngleQ8 = capsulePrev.startAngleQ6 << 2
         
-        diffAngle_q8 = (currentStartAngle_q8)-(prevStartAngle_q8)
-        if prevStartAngle_q8 > currentStartAngle_q8:
-            diffAngle_q8 += (360 << 8)
+        diffAngleQ8 = (currentStartAngleQ8)-(prevStartAngleQ8)
+        if prevStartAngleQ8 > currentStartAngleQ8:
+            diffAngleQ8 += (360 << 8)
 
-        angleInc_q16 = (diffAngle_q8 << 3) // 3
-        currentAngle_raw_q16 = (prevStartAngle_q8 << 8)
+        angleIncQ16 = (diffAngleQ8 << 3) // 3
+        currentAngleRawQ16 = (prevStartAngleQ8 << 8)
         
-        for pos in range(len(capsule_prev.ultra_cabins)):
+        for pos in range(len(capsulePrev.ultraCabins)):
             
-            dist_q2 = [0] * 3
-            angle_q6 = [0] * 3
+            distQ2 = [0] * 3
+            angleQ6 = [0] * 3
             syncBit = [0] * 3
             
-            dist_major = capsule_prev.ultra_cabins[pos].major
+            distMajor = capsulePrev.ultraCabins[pos].major
             
             # signed partial integer, using the magic shift here
             # DO NOT TOUCH
             
-            dist_predict1 = capsule_prev.ultra_cabins[pos].predict1
-            dist_predict2 = capsule_prev.ultra_cabins[pos].predict2
+            distPredict1 = capsulePrev.ultraCabins[pos].predict1
+            distPredict2 = capsulePrev.ultraCabins[pos].predict2
             
-            dist_major2 = 0
+            distMajor2 = 0
             
             # prefetch next ...
-            if pos == len(capsule_prev.ultra_cabins) - 1:
-                dist_major2 = capsule_current.ultra_cabins[0].major
+            if pos == len(capsulePrev.ultraCabins) - 1:
+                distMajor2 = capsuleCurrent.ultraCabins[0].major
             else:
-                dist_major2 = capsule_prev.ultra_cabins[pos + 1].major
+                distMajor2 = capsulePrev.ultraCabins[pos + 1].major
             
             
             # decode with the var bit scale ...
-            dist_major, scalelvl1 = PyRPlidarScanUltraCapsule._varbitscale_decode(dist_major)
-            dist_major2, scalelvl2 = PyRPlidarScanUltraCapsule._varbitscale_decode(dist_major2)
+            distMajor, scalelvl1 = LidarScanUltraCapsule._varbitscaleDecode(distMajor)
+            distMajor2, scalelvl2 = LidarScanUltraCapsule._varbitscaleDecode(distMajor2)
             
             
-            dist_base1 = dist_major
-            dist_base2 = dist_major2
+            distBase1 = distMajor
+            distBase2 = distMajor2
             
-            if not(dist_major) and dist_major2:
-                dist_base1 = dist_major2
+            if not(distMajor) and distMajor2:
+                distBase1 = distMajor2
                 scalelvl1 = scalelvl2
             
-            dist_q2[0] = (dist_major << 2)
-            if (dist_predict1 == 0xFFFFFE00) or (dist_predict1 == 0x1FF):
-                dist_q2[1] = 0
+            distQ2[0] = (distMajor << 2)
+            if (distPredict1 == 0xFFFFFE00) or (distPredict1 == 0x1FF):
+                distQ2[1] = 0
             else:
-                dist_predict1 = (dist_predict1 << scalelvl1)
-                dist_q2[1] = ((dist_predict1 + dist_base1) << 2) & 0xFFFFFFFF
+                distPredict1 = (distPredict1 << scalelvl1)
+                distQ2[1] = ((distPredict1 + distBase1) << 2) & 0xFFFFFFFF
             
-            if (dist_predict2 == 0xFFFFFE00) or (dist_predict2 == 0x1FF):
-                dist_q2[2] = 0
+            if (distPredict2 == 0xFFFFFE00) or (distPredict2 == 0x1FF):
+                distQ2[2] = 0
             else:
-                dist_predict2 = (dist_predict2 << scalelvl2)
-                dist_q2[2] = ((dist_predict2 + dist_base2) << 2) & 0xFFFFFFFF
+                distPredict2 = (distPredict2 << scalelvl2)
+                distQ2[2] = ((distPredict2 + distBase2) << 2) & 0xFFFFFFFF
         
         
             for cpos in range(3):
                 
-                syncBit[cpos] = 1 if (((currentAngle_raw_q16 + angleInc_q16) % (360 << 16)) < angleInc_q16) else 0
+                syncBit[cpos] = 1 if (((currentAngleRawQ16 + angleIncQ16) % (360 << 16)) < angleIncQ16) else 0
                 
-                offsetAngleMean_q16 = int(7.5 * 3.1415926535 * (1 << 16) / 180.0)
+                offsetAngleMeanQ16 = int(7.5 * 3.1415926535 * (1 << 16) / 180.0)
                 
-                if dist_q2[cpos] >= (50 * 4):
+                if distQ2[cpos] >= (50 * 4):
                     
                     k1 = 98361
-                    k2 = int(k1 / dist_q2[cpos])
+                    k2 = int(k1 / distQ2[cpos])
                     
-                    offsetAngleMean_q16 = int(8 * 3.1415926535 * (1 << 16) / 180) - int(k2 << 6) - int((k2 * k2 * k2) / 98304)
+                    offsetAngleMeanQ16 = int(8 * 3.1415926535 * (1 << 16) / 180) - int(k2 << 6) - int((k2 * k2 * k2) / 98304)
                 
-                angle_q6[cpos] = (currentAngle_raw_q16 - int(offsetAngleMean_q16 * 180 / 3.14159265)) >> 10
-                currentAngle_raw_q16 += angleInc_q16
+                angleQ6[cpos] = (currentAngleRawQ16 - int(offsetAngleMeanQ16 * 180 / 3.14159265)) >> 10
+                currentAngleRawQ16 += angleIncQ16
                 
-                if angle_q6[cpos] < 0: angle_q6[cpos] += (360 << 6)
-                if angle_q6[cpos] >= (360 << 6): angle_q6[cpos] -= (360 << 6)
+                if angleQ6[cpos] < 0: angleQ6[cpos] += (360 << 6)
+                if angleQ6[cpos] >= (360 << 6): angleQ6[cpos] -= (360 << 6)
                 
-                node = PyRPlidarMeasurementHQ(syncBit[cpos], angle_q6[cpos], dist_q2[cpos])
+                node:LidarMeasurementHQ = LidarMeasurementHQ(syncBit[cpos], angleQ6[cpos], distQ2[cpos])
                 nodes.append(node)
 
         return nodes

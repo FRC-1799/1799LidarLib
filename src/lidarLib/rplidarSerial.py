@@ -1,4 +1,3 @@
-import string
 import serial
 from serial.tools import list_ports
 
@@ -7,9 +6,9 @@ from serial.tools import list_ports
 class RPlidarSerial:
     """Class to handle the serial bus used by a lidar"""
     def __init__(self):
-        self.serial = None
+        self.serial:serial.Serial = None # type: ignore
 
-    def open(self, port:string, vendorID:int, productID:int, serialNumber:string, baudrate:int, timeout:int)->None:
+    def open(self, port:str, vendorID:int, productID:int, serialNumber:str, baudrate:int, timeout:int)->None:
         """
             Opens a serial port on the specified port and with the specified baud rate. 
             Will print a warning but not throw an error if the port can not be opened. This error checking should be managed somewhere else
@@ -29,7 +28,7 @@ class RPlidarSerial:
             raise ValueError("Could not find device with product id:", productID, ", Vendor id:", vendorID, ", and serialNumber:", serialNumber, ".",
             "Please make sure the lidar is plugged in and check that these three values are correct")
 
-        if self.serial is not None:
+        if self.serial is not None: # type: ignore
             self.close()
 
 
@@ -41,10 +40,10 @@ class RPlidarSerial:
     
     def close(self)->None:
         """Closes and dereferences the internal serial port"""
-        if self.serial is None:
+        if self.serial is None: # type: ignore
             return
         self.serial.close()
-        self.serial=None
+        self.serial=None # type: ignore
     
    
     
@@ -58,17 +57,18 @@ class RPlidarSerial:
 
     def setDtr(self, value:int)->None:
         """sets the dtr of the internal serial port. Whenever the port is closed this value will be lost and need to be reset"""
-        self.serial.dtr = value
+        self.serial.dtr = value # type: ignore 
 
     def isOpen(self)->bool:
         """returns wether or not the internal port is open"""
-        return self.serial!=None 
+        return self.serial!=None  # type: ignore
     
 
     def bufferSize(self)->int:
-        """returns the number of Bytes currently in the serial buffer"""
+        """returns the number of Bytes currently in the serial buffer. Will return 0 if the serial bus is not open."""
         if self.isOpen():
             return self.serial.in_waiting
+        return 0
 
 
     def flush(self)->None:

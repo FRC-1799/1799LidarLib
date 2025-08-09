@@ -101,7 +101,7 @@ class FRCQuickstartLidarProject:
             lidarTranslations = []
             for lidar in lidars:
                 if lidar.isConnected() and lidar.getLastMap():
-                    lidar.setCurrentLocalTranslation(ntPublisher.getPoseAsTran())
+                    lidar.setCurrentLocalTranslation(ntPublisher.getRobotPoseAsTrans())
                     hitboxMap.addMap(lidar.getLastMap())
                     pointMap = pointMap+lidar.getLastMap().getPoints()
                     lidarTranslations.append(lidar.getCombinedTranslation())

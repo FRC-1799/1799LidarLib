@@ -1,29 +1,29 @@
 import json
-from math import acos, asin, cos, pi, sin
+from math import cos, pi, sin
 import os
-import threading
 import time
+from typing import Any
 
 import serial
-from importlib import resources
+
 from lidarLib.translation import translation
 from lidarLib.Lidar import Lidar
 from lidarLib.LidarConfigs import lidarConfigs
 from serial.tools import list_ports
 
-from lidarLib.lidarProtocol import RPLIDAR_CMD_GET_HEALTH, RPLIDAR_DESCRIPTOR_LEN, RPLIDAR_MAX_MOTOR_PWM, RPLIDAR_SYNC_BYTE1, RPLIDAR_SYNC_BYTE2, RPlidarCommand, RPlidarConnectionError, RPlidarHealth, RPlidarProtocolError, RPlidarResponse
+from lidarLib.lidarProtocol import RPLIDAR_CMD_GET_HEALTH, RPLIDAR_DESCRIPTOR_LEN, RPLIDAR_MAX_MOTOR_PWM, RPLIDAR_SYNC_BYTE1, RPLIDAR_SYNC_BYTE2, LidarCommand, LidarHealth, LidarResponse
 from lidarLib.renderLib.renderMachine import initMachine
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 
 
-def getInput(toPrint:str = None, shouldStrip:bool = True, shouldLower:bool = True):
+def getInput(toPrint:str = None, shouldStrip:bool = True, shouldLower:bool = True): # type: ignore
     response = input(toPrint + "\n")
     if shouldStrip: response=response.strip()
     if shouldLower: response=response.lower()
     return response
 
-def standardQuestion(question:str, yesStr:str = None, noStr:str = None, helpStr:str = None, invalidStr:str = None, addAnswerString:bool=True)->bool:
+def standardQuestion(question:str, yesStr:str = None, noStr:str = None, helpStr:str = None, invalidStr:str = None, addAnswerString:bool=True)->bool: # type: ignore
 
     while True:
         response = getInput(question+((" (y/n" + ("/help)" if helpStr else")")) if addAnswerString else ""))
@@ -47,7 +47,7 @@ def standardQuestion(question:str, yesStr:str = None, noStr:str = None, helpStr:
 
 
 def handleQuickstartProjects(path:str, configFilePath:str):
-    projects=[]
+    projects:list[str]=[]
     for item in os.listdir(path):
 
         if os.path.isdir(item):
@@ -58,9 +58,9 @@ def handleQuickstartProjects(path:str, configFilePath:str):
 
         try:
             with open(item, 'r') as file:
-                data:dict = json.load(file)
-                if data.get("type", "lol")=="projectConfig":
-                    projects.append(item)
+                data:dict = json.load(file) # type: ignore
+                if data.get("type", "lol")=="projectConfig": # type: ignore
+                    projects.append(item) # type: ignore
         except:
             pass
 
@@ -70,7 +70,7 @@ def handleQuickstartProjects(path:str, configFilePath:str):
             helpStr= "Project config files are used to set up systems will multiple lidar objects like the FRCQuickstartLidarProject included in this library."
         ):
             with open(project, 'r+') as file:
-                data:dict = json.load(file)
+                data:dict[str, Any] = json.load(file)
                 file.seek(0)
                 file.truncate()
                 if "lidarConfigs" in data:
@@ -120,7 +120,7 @@ def handleQuickstartProjects(path:str, configFilePath:str):
                 json.dump(data, file, indent=4)    
 
 def demoRun(configPath:str):
-    configs:lidarConfigs = lidarConfigs.configsFromJson(configPath)
+    configs:lidarConfigs = lidarConfigs.configsFromJson(configPath) # type: ignore
     lidar:Lidar = Lidar(configs)
 
     if not configs.autoConnect:
@@ -142,7 +142,7 @@ def demoRun(configPath:str):
 
     time.sleep(1)
 
-    renderer, pipe = initMachine()
+    renderer, pipe = initMachine() # type: ignore
     
     while pipe.isConnected():
         pipe.send(lidar.getLastMap())
@@ -157,7 +157,7 @@ class lidarConfigurationTool:
 
     def __init__(self):
         self.defaults = lidarConfigs.defaultConfigs
-        self.configFile:lidarConfigs=None
+        self.configFile:lidarConfigs=None # type: ignore
         # self.configFile = lidarConfigs(port="lol")
 
         # #opening
@@ -220,7 +220,7 @@ class lidarConfigurationTool:
     def opening(self):
         standardQuestion(
             "Welcome the Wired lib lidar Config tool. If at any time you are confused type \"help\" and more information will be provided. Make sense?",
-            None,
+            None, # type: ignore
             "Try typing \"help\" for help"
             "throughout the tool the character \'y\' will be used for yes and the character \'n\' will be used for no. If these responses are not working make sure your typing the right character and then restart the tool."
         )
@@ -233,14 +233,14 @@ class lidarConfigurationTool:
         )
 
     def findLidar(self):
-        trash = getInput("Please plug in EXACTLY 1 Slamtec lidar to be configured. Press enter to continue")
+        trash = getInput("Please plug in EXACTLY 1 Slamtec lidar to be configured. Press enter to continue") # type: ignore
     
 
 
         for bus in list_ports.comports():
             if bus.vid == self.defaults["vendorID"]:
-                if self.configFile==None:
-                    self.configFile = lidarConfigs(vendorID=(bus.vid), productID=(bus.pid), serialNumber=bus.serial_number)
+                if self.configFile==None: # type: ignore
+                    self.configFile = lidarConfigs(vendorID=(bus.vid), productID=(bus.pid), serialNumber=bus.serial_number) # type: ignore
                 else:
                     print("Detected multiple lidar like devices. Please make sure that there is only one lidar plugged in. If the issue continues please try on a different device.")
                     
@@ -251,7 +251,7 @@ class lidarConfigurationTool:
                         self.enterSerialValuesManual()
                         return
  
-                    self.configFile=None
+                    self.configFile=None # type: ignore
                     self.findLidar()
                     return
                 
@@ -410,14 +410,14 @@ class lidarConfigurationTool:
             if bus.serial_number == self.configFile.serialNumber and bus.vid == self.configFile.vendorID and bus.pid == self.configFile.productID:
                 port = bus.device
         
-        if not port:
+        if not port: # type: ignore
             raise ValueError("Could not find port associated with lidar")
 
         serialPort = serial.Serial(port)
         serialPort.timeout = 0.5
         for baudrate in [115200, 256000]:
             serialPort.baudrate = baudrate
-            serialPort.write(RPlidarCommand(RPLIDAR_CMD_GET_HEALTH, None).raw_bytes)
+            serialPort.write(LidarCommand(RPLIDAR_CMD_GET_HEALTH, None).rawBytes) # type: ignore
             count=0
             while serialPort.in_waiting<7:
                 time.sleep(0.01)
@@ -426,20 +426,20 @@ class lidarConfigurationTool:
                     break
             if count>1: continue
             
-            descriptor = RPlidarResponse(serialPort.read(RPLIDAR_DESCRIPTOR_LEN))
+            descriptor = LidarResponse(serialPort.read(RPLIDAR_DESCRIPTOR_LEN))
 
                     
-            if descriptor.sync_byte1 != RPLIDAR_SYNC_BYTE1[0] or descriptor.sync_byte2 != RPLIDAR_SYNC_BYTE2[0]:
+            if descriptor.syncByte1 != RPLIDAR_SYNC_BYTE1[0] or descriptor.syncByte2 != RPLIDAR_SYNC_BYTE2[0]:
                 continue
 
 
             
-            while serialPort.in_waiting<descriptor.data_length:
+            while serialPort.in_waiting<descriptor.dataLength:
                 time.sleep(0.1)
                 print("loop")
-            data = serialPort.read(descriptor.data_length)
+            data = serialPort.read(descriptor.dataLength)
             
-            health = RPlidarHealth(data)
+            health = LidarHealth(data)
             if health.status!=0:
                 continue
 
@@ -502,14 +502,12 @@ class lidarConfigurationTool:
 
         white = (255,255,255)
 
-        clock = pygame.time.Clock()
         
     
         directory = os.path.dirname(os.path.realpath(__file__))
         print(directory)
         robotImg = pygame.image.load(os.path.join(directory, 'robot.png'))
         lidarImg = pygame.image.load(os.path.join(directory, 'lidar.png'))
-        imageRect = lidarImg.get_rect(center=(displayWidth // 2, displayHeight // 2))
 
 
 
@@ -612,7 +610,7 @@ class lidarConfigurationTool:
                 self.getTransOrDeadband(False)
                 return
             else:
-                self.configFile.deadband = (deadbandStart, deadbandEnd)
+                self.configFile.deadband = [deadbandStart, deadbandEnd]
 
 
 
@@ -725,7 +723,7 @@ class lidarConfigurationTool:
 class InputBox:
 
 
-    def __init__(self, x, y, w, h, text=''):
+    def __init__(self, x:float, y:float, w:float, h:float, text:str=''):
         pygame.font.init() #
 
         self.font = pygame.font.SysFont(None, 22)
@@ -744,7 +742,7 @@ class InputBox:
 
 
 
-    def handleEvent(self, event):
+    def handleEvent(self, event:pygame.event.Event)->None:
         if event.type == pygame.MOUSEBUTTONDOWN:
             # If the user clicked on the input_box rect.
             if self.rect.collidepoint(event.pos):
@@ -769,7 +767,7 @@ class InputBox:
         width = max(200, self.txt_surface.get_width()+10)
         self.rect.w = width
 
-    def draw(self, screen):
+    def draw(self, screen:pygame.Surface):
         # Blit the text.
         screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
         # Blit the rect.

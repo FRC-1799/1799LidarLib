@@ -1,11 +1,15 @@
-from lidarLib import lidarMeasurement
 from lidarLib.translation import translation
+from typing import TYPE_CHECKING, Any
+if TYPE_CHECKING:
+    from lidarLib import Lidar
+    from lidarLib.lidarMeasurement import lidarMeasurement
+
 
 class lidarMap:
     """
         Class for handling a full 360 scan of lidar data
     """
-    def __init__(self, hostLidar:"Lidar.Lidar", mapID=0, deadband=None, sensorThetaOffset=0):
+    def __init__(self, hostLidar:"Lidar.Lidar", mapID:int=0, deadband:list[float]=None, sensorThetaOffset:float=0): # type: ignore
         """
             Initializes a lidarMap scan
             host lidar should be set to the lidar object responsible for populating the map. 
@@ -14,16 +18,16 @@ class lidarMap:
             Deadband is a range of angles that should be dropped. the proper format is a list of 2 integers in which the first value is the start of the deadband and the second value is the end
             sensorThetaOffset will be added to the point angle before the deadband is calculated however it is not permanently applied to the point. This should instead be done by the translation argument to addVal
         """
-        self.points={}
-        self.deadband=deadband
-        self.deadbandRaps= deadband != None and deadband[0]>deadband[1]
+        self.points:dict[float, lidarMeasurement]={}
+        self.deadband:list[float]=deadband
+        self.deadbandRaps:bool= deadband != None and deadband[0]>deadband[1] # type: ignore
         self.sensorThetaOffset=sensorThetaOffset
-        self.hostLidar=hostLidar
+        self.hostLidar:"Lidar.Lidar"=hostLidar
         self.isFinished=False
         self.mapID=mapID
         self.len=0
-        self.startTime=None
-        self.endTime=None
+        self.startTime:float=None # type: ignore
+        self.endTime:float=None # type: ignore
         
 
     def __array__(self):
@@ -39,12 +43,12 @@ class lidarMap:
         return state
         
     
-    def __setstart__(self, state):
+    def __setstart__(self, state:dict[str,Any]):
         self.__dict__.update(state)
-        self.hostLidar=None
+        self.hostLidar=None # type: ignore
 
 
-    def addVal(self, point:lidarMeasurement, translation: translation, printFlag=False)->None:
+    def addVal(self, point:"lidarMeasurement", translation: translation)->None:
         """
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE
             Adds a value to the lidars point list. if the imputed point shares an angle with a point already recorded by the lidar the old point will be replaced
@@ -54,12 +58,12 @@ class lidarMap:
             if printFlag is set to true information about the point will also be printed after all translation and validity checks. This means that invalid points will not be printed
 
         """
-        if self.startTime==None:
+        if self.startTime==None: # type: ignore
             self.startTime=point.timeStamp
 
         if point.start_flag:
-            self.endTime=point.timeStamp
-            self.hostLidar._mapIsDone()
+            self.endTime:float=point.timeStamp
+            self.hostLidar._mapIsDone() # type: ignore
             return
 
         if point.quality==0 or point.distance==0:
@@ -73,7 +77,7 @@ class lidarMap:
                 if (point.angle+self.sensorThetaOffset)%360>self.deadband[0] and (point.angle+self.sensorThetaOffset)%360<self.deadband[1]:
                     return
 
-        if translation !=None:
+        if translation !=None: # type: ignore
             translation.applyTranslation(point)
 
         # if printFlag:
@@ -88,17 +92,18 @@ class lidarMap:
         
     
 
-    def fetchPointAtClosestAngle(self, angle:float, tolerance=360)->lidarMeasurement:
+    def fetchPointAtClosestAngle(self, angle:float, tolerance:int=360)->"lidarMeasurement":
         """
             Returns the point in the map with the closest angle to the imputed angle. This search will not loop around 360.
             If tolerance is set and the distance between the closest points angle and the requested angle is greater than tolerance None will be returned
             Additionally None will be returned if the map is empty 
         """
         if len(self.points)==0:
-            return None
-        foundPoint= self.points[min([key for key, value in self.points.items()], key=lambda value: abs(value - angle))]
+            return None # type: ignore
+        
+        foundPoint= self.points[min([key for key, value in self.points.items()], key=lambda value: abs(value - angle))] # type: ignore
         if (foundPoint.angle-angle)>tolerance:
-            return 0
+            return None  # type: ignore
         return foundPoint
     
     def getDistanceBetweenClosestAngle(self, angle:float)->float:
@@ -107,10 +112,10 @@ class lidarMap:
             If the map is empty None will be returned
         """
         if len(self.points)==0:
-            return None
+            return None # type: ignore
         return abs(self.fetchPointAtClosestAngle(angle).angle-angle)
     
-    def getPoints(self)->list[lidarMeasurement.lidarMeasurement]:
+    def getPoints(self)->list["lidarMeasurement"]:
         """Returns a list of all the points within the map"""
         return list(self.points.values())
     
@@ -159,11 +164,11 @@ class lidarMap:
         else:
             raise ValueError("attempted to set a sensor offset that is not a degree value: ", theta)
         
-    def setDeadband(self, deadband:list)->None:
+    def setDeadband(self, deadband:list[float])->None:
         """
             Sets the deadband used by this map
             Deadband is a range of angles that should be dropped. The proper format is a list of 2 integers in which the first value is the start of the deadband and the second value is the end
             Any set sensor offset will be added to the point angle before the deadband is calculated.
         """
         self.deadband=deadband
-        self.deadbandRaps= deadband != None and deadband[0]>deadband[1]
+        self.deadbandRaps= deadband != None and deadband[0]>deadband[1] # type: ignore

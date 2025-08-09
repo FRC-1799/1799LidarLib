@@ -1,10 +1,10 @@
 import math
 
-def polarToCart(r:float,theta:float)->tuple:
+def polarToCart(r:float,theta:float)->tuple[float, float]:
     """translates polar coordinates to cartesian coordinates. returns a tuple with values x, y"""
     return polarToX(r, theta), polarToY(r, theta)
 
-def cartToPolar(x:float, y:float)->tuple:
+def cartToPolar(x:float, y:float)->tuple[float, float]:
     """translates cartesian coordinates to polar ones. returns a tuple with values r, theta"""
     deg=math.degrees(math.atan2(y,x))
     if deg<0:

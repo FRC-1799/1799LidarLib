@@ -1,13 +1,13 @@
 from multiprocessing.connection import Connection
 
-from lidarLib import lidarMap
+from lidarLib.lidarMap import lidarMap
 
 class renderPipeCap:
     """class that encapsulates pipe connections between a user and the render engine"""
     def __init__(self, pipe:Connection):
         """Creates a render pipe cap surrounding the pipe input"""
         self.pipe=pipe
-        self.mostRecentVal=None
+        self.mostRecentVal:lidarMap=None # type: ignore
 
 
     def _get(self)->lidarMap:
