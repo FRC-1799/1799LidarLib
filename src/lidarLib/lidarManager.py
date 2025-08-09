@@ -6,7 +6,7 @@ from lidarLib.Lidar import Lidar
 from lidarLib.lidarMap import lidarMap
 from lidarLib.lidarPipeline import dataPacket, dataPacketType, lidarPipeline
 import time
-import stop
+import tests.stop as stop
 from lidarLib.translation import translation
 
 def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):

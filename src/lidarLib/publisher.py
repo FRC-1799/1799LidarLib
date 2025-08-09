@@ -1,10 +1,10 @@
 import ntcore
 from wpimath.geometry import Pose2d, Rotation2d
 
-from constants import constants
-from lidarHitboxingMap import lidarHitboxMap
+from lidarLib.constants import constants
+from lidarLib.lidarHitboxingMap import lidarHitboxMap
 from lidarLib.lidarMeasurement import lidarMeasurement
-from lidarHitboxNode import lidarHitboxNode
+from lidarLib.lidarHitboxNode import lidarHitboxNode
 from lidarLib.translation import translation
 
 

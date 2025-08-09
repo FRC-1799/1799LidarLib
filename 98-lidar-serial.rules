@@ -1,3 +1,0 @@
-SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="lidar0", ATTRS{serial} == "0d36450424516c46aed8d13c7c377c9a"
-
-SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="lidar1", ATTRS{serial} == "ee588bb32e863a468fd5dc8a32645891"

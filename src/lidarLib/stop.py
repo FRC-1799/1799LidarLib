@@ -5,6 +5,7 @@ from lidarLib.LidarConfigs import lidarConfigs
 
 def stop(port:str):
     config = lidarConfigs.configsFromJson(port)
+    print(config)
     config.isStop=True
     lidar = Lidar(lidarConfigs.configsFromJson(port))
 
