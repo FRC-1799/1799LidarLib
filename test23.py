@@ -1,0 +1,3 @@
+from lidarLib.lidarConfigTool import lidarConfigurationTool
+
+lidarConfigurationTool()

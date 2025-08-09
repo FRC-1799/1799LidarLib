@@ -9,7 +9,7 @@ from lidarLib.translation import translation
 
 class lidarConfigs:
 
-
+    
     defaultConfigs = {
                 
         "port" : None,
@@ -26,7 +26,9 @@ class lidarConfigs:
         "vendorID" : 0x10c4,
         "productID" : 0xea60,
         "serialNumber" : None, 
-        "name" : None
+        "name" : None,
+        "type": "ValueThatWillNeverBeUsedButNeedsToExistForReasons"
+
     }
 
 
@@ -49,6 +51,7 @@ class lidarConfigs:
                     autoConnect=defaultConfigs["autoConnect"], 
                     defaultSpeed=defaultConfigs["defaultSpeed"],
                     name = defaultConfigs["name"]
+                    
             ):
 
 
