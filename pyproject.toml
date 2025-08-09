@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "1799LidarLib"
 version = "0.0.14"
 authors = [
-  { name="Example Author", email="author@example.com" },
+  { name="Owen Flanagan", email="twisterjafla@gmail.com" },
 ]
 description = "Library for interfacing with slamtech rplidars "
 readme = "readme.md"
