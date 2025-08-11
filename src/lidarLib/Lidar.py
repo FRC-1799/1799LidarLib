@@ -217,7 +217,7 @@ class Lidar:
                 capsule_current = self.capsuleType(data)
                 
                 nodes = self.capsuleType._parseCapsule(self.capsulePrev, capsule_current) # type: ignore
-                for index, node in enumerate(nodes):
+                for index, node in enumerate(nodes): # type: ignore
                         self.currentMap.addVal(lidarMeasurement(raw_bytes=None, measurement_hq=node), self.combinedTranslation) # type: ignore
 
                 self.capsulePrev = capsule_current

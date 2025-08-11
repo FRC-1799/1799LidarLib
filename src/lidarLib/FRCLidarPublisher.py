@@ -1,3 +1,4 @@
+from math import floor
 import threading
 import time
 import ntcore
@@ -7,7 +8,6 @@ from lidarLib.constants import constants
 from lidarLib.lidarMap import lidarMap
 from lidarLib.lidarMeasurement import lidarMeasurement
 from lidarLib.translation import translation
-
 
 class publisher:
     def __init__ (self, teamNumber:int, autoConnect:bool=True):
@@ -19,6 +19,7 @@ class publisher:
         if self.autoConnect:
             self.loop = threading.Thread(target=self.connectionTester, daemon=True)
             self.loop.start()
+        self.nodeWidth:float =0
 
         
 
@@ -36,7 +37,7 @@ class publisher:
 
         self.nodeWidthTopic = self.publishFolder.getFloatTopic("NodeWidth")
         self.nodeWidthPublisher = self.nodeWidthTopic.publish()
-        self.nodeWidthPublisher.set(constants.mapNodeSizeMeters)
+        self.updateNodeWidth(constants.mapNodeSizeMeters)
 
         self.lidarPoseTopic = self.publishFolder.getStructArrayTopic("lidarPoses", Pose2d)
         self.lidarPosePublisher = self.lidarPoseTopic.publish()
@@ -124,9 +125,24 @@ class publisher:
 
     def __publishLidarReadings(self, map:list[Pose2d]):
         """Internal function to publish lidar readings. manages the internal grid so that a manageable amount of data is published to network tables"""
+        poseDict:dict[float, dict[float, bool]] = {}
+        for pose in map:
+            if poseDict.get(floor(pose.x/self.nodeWidth)*self.nodeWidth)==None:
+                 poseDict[floor(pose.x/self.nodeWidth)*self.nodeWidth]={}
+            poseDict[floor(pose.x/self.nodeWidth)*self.nodeWidth][floor(pose.x/self.nodeWidth)*self.nodeWidth] = True
 
-    def updateNodeWith(self, nodeWidth:int):
+        publishPoses:list[Pose2d] = []
+        for x in poseDict.keys():
+            for y in poseDict[x].keys():
+                publishPoses.append(Pose2d(x, y, Rotation2d()))
+
+        self.individualPointPublisher.set(publishPoses)
+
+
+
+    def updateNodeWidth(self, nodeWidth:float):
         """Changes the published node width value. This tells other network table connections how big the points on the grid used to publish are."""
+        self.nodeWidth=nodeWidth
         self.nodeWidthPublisher.set(nodeWidth)
 
 
