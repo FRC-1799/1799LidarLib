@@ -101,6 +101,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
 
     print("lidar shut down")
     lidar.disconnect()
+    exit()
 
 
 

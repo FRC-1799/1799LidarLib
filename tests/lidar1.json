@@ -8,7 +8,7 @@
     },
     "autoConnect": true,
     "autoStart":true,
-    "debugMode" : true,
+    "debugMode" : false,
     "name" : "lidar1",
     "mode" : "express",
     "type" : "lidarConfig" 

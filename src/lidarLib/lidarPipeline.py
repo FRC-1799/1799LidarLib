@@ -19,13 +19,12 @@ class lidarPipeline:
     def __init__(self, pipe:Connection, host:Process=None): # type: ignore
         """Creates a render pipe cap surrounding the pipe input"""
         self.__pipe=pipe
-        self.__dataPackets:list[Any] = []
+        self.__dataPackets:list[dataPacket] = []
         self.host=host
 
 
-        for type in dataPacketType.options:
-            print(type)
-            self.__dataPackets.append(None)
+        for dataType in dataPacketType.options: # type: ignore
+            self.__dataPackets.append(None) # type: ignore
 
         self.shouldLive=True
 
@@ -42,7 +41,7 @@ class lidarPipeline:
                 try:
                     mostRecentVal = self.__pipe.recv()
                     if (mostRecentVal.__class__ == dataPacket):
-                        self.__dataPackets[mostRecentVal.type] = mostRecentVal.data
+                        self.__dataPackets[mostRecentVal.type] = mostRecentVal
 
                     elif (mostRecentVal.__class__ == commandPacket):
                         self.__commandQue.append(mostRecentVal)
@@ -124,6 +123,11 @@ class lidarPipeline:
         self.__get()
         return self.__dataPackets[type]
     
+    def getData(self, type:int)->Any:
+        data:dataPacket = self.getDataPacket(type)
+        if data:
+            return data.data
+        return None
 
     def _sendMap(self, map:lidarMap)->None:
         """
@@ -220,7 +224,7 @@ class lidarPipeline:
         try:
             self.__pipe.send(ping())
         except EOFError as e: # type: ignore
-            print("pipe closure detected")
+            print("pipe closure detected\n\n\n\n\n\n\n\n\n")
             return False
 
         return True
@@ -286,8 +290,8 @@ class lidarPipeline:
             Due to the nature of piped lidar this information may be slightly out of date as data is only refreshed so often.
             However it should normally be accurate to 20ms or less.
         """
-
-        return self.getDataPacket(dataPacketType.lidarMap).data
+    
+        return self.getData(dataPacketType.lidarMap)
 
 
     def startScan(self)->None:
@@ -351,7 +355,7 @@ class lidarPipeline:
             Due to the nature of piped lidar this information may be slightly out of date as data is only refreshed so often.
             However it should normally be accurate to 20ms or less.
         """
-        return self.__dataPackets[dataPacketType.translation]           
+        return self.getData(dataPacketType.translation)           
 
     def getInfo(self)->LidarDeviceInfo:
         """
@@ -360,7 +364,7 @@ class lidarPipeline:
             While this will not normally cause issues it is something to be aware of.
         """
 
-        return self.getDataPacket(dataPacketType.lidarInfo).data
+        return self.getData(dataPacketType.lidarInfo)
 
     def getHealth(self)->LidarHealth:
         """
@@ -369,7 +373,7 @@ class lidarPipeline:
             While this will not normally cause issues it is something to be aware of.
         """
         
-        return self.getDataPacket(dataPacketType.lidarHealth).data
+        return self.getData(dataPacketType.lidarHealth)
     
     def getSampleRate(self)->LidarSampleRate:
         """
@@ -379,7 +383,7 @@ class lidarPipeline:
             While this will not normally cause issues it is something to be aware of.
         """
 
-        return self.getDataPacket(dataPacketType.sampleRate).data
+        return self.getData(dataPacketType.sampleRate)
 
     def getScanModeTypical(self)->int:
         """
@@ -387,7 +391,8 @@ class lidarPipeline:
             Due to technical limitations this function returns data cached when the lidar was most recently connected.
             While this will not normally cause issues it is something to be aware of.
         """
-        return self.getDataPacket(dataPacketType.scanModeTypical).data
+        
+        return self.getData(dataPacketType.scanModeTypical)
 
     def getScanModeCount(self)->int:
         """
@@ -396,7 +401,7 @@ class lidarPipeline:
             While this will not normally cause issues it is something to be aware of.
         """
 
-        return self.getDataPacket(dataPacketType.scanModeCount).data
+        return self.getData(dataPacketType.scanModeCount)
     
     def getScanModes(self)->list[LidarScanMode]:
         """
@@ -406,7 +411,7 @@ class lidarPipeline:
             WARNING: some of the modes returned may be supported by the lidar but not supported by the client side lib.
         """
 
-        return self.getDataPacket(dataPacketType.scanModes).data
+        return self.getData(dataPacketType.scanModes)
         
 
 

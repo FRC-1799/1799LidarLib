@@ -24,8 +24,8 @@ class Lidar:
 
         self.lidarSerial:RPlidarSerial = None # type: ignore
         self.measurements = None
-        self.currentMap=lidarMap(self)
-        self.__lastMap=lidarMap(self)
+        self.currentMap=lidarMap(self) # type: ignore
+        self.__lastMap=lidarMap(self) # type: ignore
         #self.eventLoop()
         #self.deadband=deadband
         self.config = config
@@ -36,7 +36,7 @@ class Lidar:
         self.currentMotorPWM=0
         #self.debugMode=debugMode
 
-        self.capsulePrev:LidarScanCapsule
+        self.capsulePrev:LidarScanCapsule = None # type: ignore
         
         self.scanModes:list[LidarScanMode]=[]
         self.typicalScanMode:int=None # type: ignore
@@ -142,7 +142,7 @@ class Lidar:
             self.lidarSerial.close()
             
             self.lidarSerial = None # type: ignore
-            print("PyRPlidar Info : device is disconnected")
+            print("Lidar disconnected disconnected")
 
     def __updateLoop(self)->None:
         """
@@ -313,7 +313,7 @@ class Lidar:
             if count>waitTime:
                 return None # type: ignore
             
-        return self.lidarSerial.receiveData(descriptor.dataLength)
+            return self.lidarSerial.receiveData(descriptor.dataLength)
         
 
 
@@ -589,7 +589,7 @@ class Lidar:
     def _mapIsDone(self)->None:
         """Handles all the cleanup that is needed when a scan map is done and a new one needs to be initialized"""
         self.__lastMap=self.currentMap
-        self.currentMap=lidarMap(self, mapID=self.__lastMap.mapID+1, deadband=self.config.deadband, sensorThetaOffset=self.localTranslation.theta)
+        self.currentMap=lidarMap(self, mapID=self.__lastMap.mapID+1, deadband=self.config.deadband, sensorThetaOffset=self.localTranslation.theta) # type: ignore
         if self.config.debugMode:
             print("map swap attempted")
             print(len(self.__lastMap.getPoints()),self.__lastMap.len, self.__lastMap.mapID, self.__lastMap.getRange(), self.__lastMap.getHz(), self.__lastMap.getPeriod())

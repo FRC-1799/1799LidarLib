@@ -84,8 +84,8 @@ class publisher:
 
     def getPose(self)->Pose2d:
         # TODO
-        if self.poseSubscriber.get()==Pose2d():
-            raise Warning("LidarLib received a pose of 0,0,0. This likely means that the lidar lib is not getting a valid pose input which stops it from accurately tracking")
+        # if self.poseSubscriber.get()==Pose2d():
+        #     raise Warning("LidarLib received a pose of 0,0,0. This likely means that the lidar lib is not getting a valid pose input which stops it from accurately tracking")
 
         # if self.poseSubscriber.getLastChange()< self.publisher.addTimeSyncListener() self.publisher.getServerTimeOffset()-0.2 and not self.isConnectedToSim():
         #     raise Warning("robot pose data (at position \"robotPose\"is not being consistently updated. This can cause lidar data to be inaccurate")
@@ -129,7 +129,7 @@ class publisher:
         for pose in map:
             if poseDict.get(floor(pose.x/self.nodeWidth)*self.nodeWidth)==None:
                  poseDict[floor(pose.x/self.nodeWidth)*self.nodeWidth]={}
-            poseDict[floor(pose.x/self.nodeWidth)*self.nodeWidth][floor(pose.x/self.nodeWidth)*self.nodeWidth] = True
+            poseDict[floor(pose.x/self.nodeWidth)*self.nodeWidth][floor(pose.y/self.nodeWidth)*self.nodeWidth] = True
 
         publishPoses:list[Pose2d] = []
         for x in poseDict.keys():
