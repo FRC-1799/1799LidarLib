@@ -14,7 +14,7 @@ for bus in list_ports.comports(include_links=True):
 
 
 try:
-    serial = serial.Serial(port, 256000, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, timeout=3, dsrdtr=True)
+    serial = serial.Serial(port, 256000, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, timeout=3, dsrdtr=True) # type: ignore
 except serial.SerialException as err:
     print(err)
     print("Failed to connect to the rplidar")

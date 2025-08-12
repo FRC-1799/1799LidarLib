@@ -3,6 +3,7 @@ from lidarLib.LidarConfigs import lidarConfigs
 from multiprocessing import Pipe, Process
 from lidarLib import *
 from lidarLib.Lidar import Lidar
+import setproctitle
 
 from lidarLib.lidarPipeline import dataPacket, dataPacketType, lidarPipeline
 import time
@@ -11,6 +12,8 @@ import time
 
 def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
     print("Manager start")
+
+    setproctitle.setproctitle(lidarConfig.name + "manager")
 
     lidar:Lidar = Lidar(lidarConfig)
 
@@ -98,6 +101,10 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
 
         
         start+=0.02
+
+        time.sleep(10)
+        lidar.disconnect()
+        raise SystemError()
 
     print("lidar shut down")
     lidar.disconnect()

@@ -224,7 +224,7 @@ class lidarPipeline:
         try:
             self.__pipe.send(ping())
         except: 
-            print("pipe closure detected\n\n\n\n\n\n\n\n\n")
+            # print("pipe closure detected\n\n\n\n\n\n\n\n\n")
             return False
 
         return True

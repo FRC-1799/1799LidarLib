@@ -80,10 +80,8 @@ class FRCQuickstartLidarProject:
                 thread.join(5)
                 if thread.is_alive():
                     raise Warning("Lidar thread did not properly terminate")
-                if input("should continue") == 'n':
-                    return
+
                 
-            print("update", thread )
             time.sleep(5)
             
     @classmethod
@@ -94,15 +92,21 @@ class FRCQuickstartLidarProject:
         for config in configList:
             lidars.append(lidarManager.makePipedLidar(config))
         
-        time.sleep(3)
-
+        time.sleep(10)
         
         while ntPublisher.isConnected():
 
             pointMap:list[lidarMeasurement]=[]
             lidarTranslations:list[translation] = []
             for lidar in lidars:
-                if lidar.isConnected() and lidar.getLastMap():
+                if not lidar.isConnected():
+                    
+                    index = lidars.index(lidar)
+                    print("lidar", configList[index].name, "Restarted")
+
+                    lidars[index]=lidarManager.makePipedLidar(configList[index])   
+
+                elif lidar.getLastMap():
                     lidar.setCurrentLocalTranslation(ntPublisher.getRobotPoseAsTrans())
                     pointMap = pointMap+lidar.getLastMap().getPoints()
                     lidarTranslations.append(lidar.getCombinedTranslation())
