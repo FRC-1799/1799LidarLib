@@ -95,16 +95,12 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
         pipeline._sendTrans(lidar.getCombinedTrans()) # type: ignore
 
         
-
-        if (start+0.02-time.perf_counter())>0:
-            time.sleep(start+0.02-time.perf_counter())
+        sleepClock:float=start+0.02-time.perf_counter()
+        if sleepClock>0:
+            time.sleep(sleepClock)
 
         
         start+=0.02
-
-        time.sleep(10)
-        lidar.disconnect()
-        raise SystemError()
 
     print("lidar shut down")
     lidar.disconnect()

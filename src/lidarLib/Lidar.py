@@ -298,7 +298,7 @@ class Lidar:
 
         return descriptor
 
-    def __receiveData(self, descriptor:LidarResponse, waitTime:int=0)->bytes:
+    def __receiveData(self, descriptor:LidarResponse, waitTime:int=0)->bytes: # type: ignore
         """
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE.
             Fetches a package from the lidar using the entered descriptor as a guide. Will return none if the buffer doesn't contain enough data.
@@ -311,9 +311,12 @@ class Lidar:
             sleep(0.001)
             count+=0.001
             if count>waitTime:
+                print("Request timeout")
+
                 return None # type: ignore
             
-            return self.lidarSerial.receiveData(descriptor.dataLength)
+            
+        return self.lidarSerial.receiveData(descriptor.dataLength)
         
 
 
