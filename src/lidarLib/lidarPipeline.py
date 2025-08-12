@@ -223,7 +223,7 @@ class lidarPipeline:
         """
         try:
             self.__pipe.send(ping())
-        except EOFError as e: # type: ignore
+        except: 
             print("pipe closure detected\n\n\n\n\n\n\n\n\n")
             return False
 
