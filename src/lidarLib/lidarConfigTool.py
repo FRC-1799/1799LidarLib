@@ -17,13 +17,15 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 
 
-def getInput(toPrint:str = None, shouldStrip:bool = True, shouldLower:bool = True): # type: ignore
+def getInput(toPrint:str = None, shouldStrip:bool = True, shouldLower:bool = True)->str: # type: ignore
+    """<h2>A version of the standard input function that strips and lowers the response. </h2>"""
     response = input(toPrint + "\n")
     if shouldStrip: response=response.strip()
     if shouldLower: response=response.lower()
     return response
 
 def standardQuestion(question:str, yesStr:str = None, noStr:str = None, helpStr:str = None, invalidStr:str = None, addAnswerString:bool=True)->bool: # type: ignore
+    """<h2>Manages asking a y/n question and returns the result as a bool.</h2>"""
 
     while True:
         response = getInput(question+((" (y/n" + ("/help)" if helpStr else")")) if addAnswerString else ""))
@@ -47,6 +49,7 @@ def standardQuestion(question:str, yesStr:str = None, noStr:str = None, helpStr:
 
 
 def handleQuickstartProjects(path:str, configFilePath:str):
+    """<h2>Manages adding a lidar to quickstart projects or creating a project if one doesn't already exist.</h2>"""
     projects:list[str]=[]
     for item in os.listdir(path):
 
@@ -120,6 +123,7 @@ def handleQuickstartProjects(path:str, configFilePath:str):
                 json.dump(data, file, indent=4)    
 
 def demoRun(configPath:str):
+    """<h2> A basic run of a lidar use for use as a demo/test at the end of lidar configuration. """
     configs:lidarConfigs = lidarConfigs.configsFromJson(configPath) # type: ignore
     lidar:Lidar = Lidar(configs)
 
@@ -154,7 +158,10 @@ def demoRun(configPath:str):
 
 
 class lidarConfigurationTool:
-
+    """
+        <h2>Class to do the work of the lidar configuration tool.</h2>
+        This class acts somewhat like a python script and so objects should not be used past being first created.
+    """
     def __init__(self):
         self.defaults = lidarConfigs.defaultConfigs
         self.configFile:lidarConfigs=None # type: ignore
@@ -218,6 +225,7 @@ class lidarConfigurationTool:
 
 
     def opening(self):
+        """<h2>Introduces the user to the config tool.</h2>"""
         standardQuestion(
             "Welcome the Wired lib lidar Config tool. If at any time you are confused type \"help\" and more information will be provided. Make sense?",
             None, # type: ignore
@@ -227,12 +235,14 @@ class lidarConfigurationTool:
 
 
     def verboseCheck(self):
+        """<h2>Checks if tool should be run in verbose mode </h2>"""
         self.verbose = standardQuestion(
             "Would you like to run in verbose mode (only recommended for people with significant experience)?",
             helpStr="Verbose mode provides the option to edit more volatile configs that may cause crashes if used wrong and should be defaulted most of the time."
         )
 
     def findLidar(self):
+        """<h2>Attempts to find the plugged in lidar based on usb ids. </h2>"""
         trash = getInput("Please plug in EXACTLY 1 Slamtec lidar to be configured. Press enter to continue") # type: ignore
     
 
@@ -270,6 +280,7 @@ class lidarConfigurationTool:
 
 
     def enterSerialValuesManual(self):
+        """<h2>A manual function to enter the usb information if the auto check isn't working. </h2>"""
         if not standardQuestion(
                 "Would you like to continue setting the productID, vendorID, and serial number of the lidar manually?",
                 helpStr=
@@ -352,6 +363,7 @@ class lidarConfigurationTool:
 
 
     def findBaudRate(self):
+        """<h2>Fetches the baudrate of the connected lidar.</h2>"""
         baudrate = self.baudRateAutoTest()
         if baudrate=="Unknown":
             if not standardQuestion(
@@ -404,7 +416,7 @@ class lidarConfigurationTool:
             
 
     def baudRateAutoTest(self):
-        
+        """<h2>Code to automatically find the baudrate of connected lidars.</h2>"""
 
         for bus in list_ports.comports():
             if bus.serial_number == self.configFile.serialNumber and bus.vid == self.configFile.vendorID and bus.pid == self.configFile.productID:
@@ -454,6 +466,12 @@ class lidarConfigurationTool:
 
 
     def getTransOrDeadband(self, isTrans:bool):
+        """
+            <h2>Code to get the translation or deadband of connected lidar </h2>.
+            isTrans determines wether the translation or deadband should be asked for. 
+            Since most of the rendering system for the deadband and translation gui one function is used for convince.
+        
+        """
         if isTrans:
             print(
                 "Next you will need to enter the offset of the lidar in relation to the robot.",
@@ -615,6 +633,7 @@ class lidarConfigurationTool:
 
 
     def getSpeed(self):
+        """<h2> Gets the speed to run the lidar at</h2>"""
         speed = getInput("Please enter the speed you would like the lidar to run at as an integer or leave default for recommended speed")
         if speed!='':
             try: speed = int(speed)
@@ -634,6 +653,7 @@ class lidarConfigurationTool:
             return
         
     def getAutoConnectAndStart(self):
+        """<h2>Gets wether the lidar should automatically connect and start or not. </h2>"""
         self.configFile.autoConnect=standardQuestion(
             "Would you like the lidar object to automatically connect when it is created(recommended yes)?",
             helpStr=
@@ -651,6 +671,7 @@ class lidarConfigurationTool:
         )
     
     def getDebug(self):
+        """<h2>Gets wether or not the lidar should be in debug mode</h2>"""
         self.configFile.debugMode=standardQuestion(
             "Would you like to create the lidar in debug mode (recommended no)?",
             helpStr=
@@ -660,6 +681,7 @@ class lidarConfigurationTool:
         )
 
     def getPath(self):
+        """<h2>Gets the path to put the lidar config file in.</h2>"""
         path=None
         while True:
             path = input("Please enter the path to the directory where you would like to store to config file(do not include the config file's name itself)")
@@ -681,7 +703,7 @@ class lidarConfigurationTool:
                 return
 
     def getName(self):
-
+        """<h2>Gets the name of the lidar</h2>"""
         while True:
             name = input(
                 "Please enter a name for the lidar. "+
@@ -721,9 +743,10 @@ class lidarConfigurationTool:
 
 
 class InputBox:
-
+    """<h2>A input box for pygame </h2>"""
 
     def __init__(self, x:float, y:float, w:float, h:float, text:str=''):
+        """<h2>Creates an input box at the given position with the given text </h2>"""
         pygame.font.init() #
 
         self.font = pygame.font.SysFont(None, 22)
@@ -743,6 +766,7 @@ class InputBox:
 
 
     def handleEvent(self, event:pygame.event.Event)->None:
+        """<h2> Handles pygame events to the input button respond to key presses and mouse clicks </h2>"""
         if event.type == pygame.MOUSEBUTTONDOWN:
             # If the user clicked on the input_box rect.
             if self.rect.collidepoint(event.pos):
@@ -763,17 +787,20 @@ class InputBox:
                 self.txt_surface = self.font.render(self.displayText + self.text, True, self.color)
 
     def update(self):
+        """<h2>Update call for the text box </h2>"""
         # Resize the box if the text is too long.
         width = max(200, self.txt_surface.get_width()+10)
         self.rect.w = width
 
     def draw(self, screen:pygame.Surface):
+        """<h2> Draws the text box to the given surface. </h2>"""
         # Blit the text.
         screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
         # Blit the rect.
         pygame.draw.rect(screen, self.color if self.hasValidText else self.invalid, self.rect, 2)
 
     def getText(self):
+        """<h2>Returns the text imputed into the box. </h2>"""
         try:
             self.hasValidText=True
             return float(self.text)

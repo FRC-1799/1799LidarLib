@@ -10,7 +10,7 @@ from lidarLib.translation import translation
 
 
 class lidarConfigs:
-
+    """<h2>Class to store and handle lidar configs.</h2>"""
     
     defaultConfigs:dict[str, Any] = {
                 
@@ -55,7 +55,10 @@ class lidarConfigs:
                     name:str = defaultConfigs["name"]
                     
             ):
-
+        """
+            <h2>Creates a lidar config from specified configs.</h2>
+            While this function is usable we recommend storing configs in a json and using the configFromJson static method instead. 
+        """
 
         self.port=port
         self.localTrans:translation = localTrans
@@ -81,6 +84,7 @@ class lidarConfigs:
             self.printConfigs()
             
     def printConfigs(self):
+        """<h2>Prints configs </h2>"""
         print("lidarConfig args", 
             "\nport:", self.port,
             "\nlocalTrans:", self.localTrans,
@@ -102,6 +106,7 @@ class lidarConfigs:
     @classmethod # type: ignore
     @typing.no_type_check
     def configsFromJson(cls:"lidarConfigs", path:str)->"lidarConfigs": # type: ignore
+        """<h2>Creates a config object from a given json.<h2>"""
         try:
             with open(path, 'r') as file:
                 data:dict[str, any] = json.load(file) # type: ignore
@@ -140,13 +145,14 @@ class lidarConfigs:
 
 
         except FileNotFoundError:
-            raise Warning(f"Error: File not found at path:", path)
-            return None 
+            raise FileNotFoundError(f"Error: File not found at path:", path)
         except json.JSONDecodeError:
-            raise Warning(f"Error: Invalid JSON format in file:", path)
-            return None
+            raise SystemError(f"Error: Invalid JSON format in file:", path)
+        except Exception as e:
+            raise RuntimeError("Something went wrong trying to read the json" + e)
 
     def writeToJson(self, path:str):
+        """<h2>Writes this config file to a .json at the specified location </h2>"""
         try:
             data = { # type: ignore
                 

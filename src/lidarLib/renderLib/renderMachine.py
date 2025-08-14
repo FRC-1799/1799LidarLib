@@ -13,9 +13,9 @@ DMAX=4000
 
 def updateLinePolar(num:int, pipe:renderPipeCap, subplot:Figure)->Tuple[Any]:
     """
-        updates the subplot using data gained from the pipe
-        pipe should be the read end of a renderPipe cap thats partner is consistently supplied with up to date lidar maps
-        subplot should be a axis value that is tied to a plot being updated by an animation(with this or a extension of this as its active function)
+        <h2>Updates the subplot using data gained from the pipe.</h2>
+        pipe should be the read end of a renderPipe cap thats partner is consistently supplied with up to date lidar maps.
+        subplot should be a axis value that is tied to a plot being updated by an animation(with this or a extension of this as its active function).
         num is an placeholder argument that is automatically supplied by animation but never used
     """
 
@@ -39,9 +39,9 @@ def updateLinePolar(num:int, pipe:renderPipeCap, subplot:Figure)->Tuple[Any]:
 
 def polarRenderMachine(pipeCap:renderPipeCap)->None:
     """
-        Initializes a render and animation and displays it. 
-        For performance reasons this function should be set up on its own process(automatically done in the initMachine function) so its slowness can not effect the data gatherers
-        Pipe should be the read end of a renderPipe cap thats partner is consistently supplied with up to date lidar maps
+        <h2>Initializes a render and animation and displays it. </h2> 
+        For performance reasons this function should be set up on its own process(automatically done in the initMachine function) so its slowness can not effect the data gatherers.
+        Pipe should be the read end of a renderPipe cap thats partner is consistently supplied with up to date lidar maps.
     """
     fig = plot.figure() # type: ignore
     subplot:Axes = plot.subplot(111, projection='polar') # type: ignore
@@ -59,19 +59,17 @@ def polarRenderMachine(pipeCap:renderPipeCap)->None:
 
 def initMachine(type:int = 0)->tuple[Process, renderPipeCap]:
     """
-        Creates a separate proses that handles all rendering and can be updated via a pipe(connection)
-        returns a tuple with the first argument being the process, this can be use cancel the process but the primary use is to be saved so the renderer doesn't get collected
-        the second argument is one end of a pipe that is used to update the render engine. this pipe should be passed new lidar maps periodically so they can be rendered. 
+        <h2>Creates a separate proses that handles all rendering and can be updated via a pipe(connection).</h2>
+        Returns a tuple with the first argument being the process, this can be use cancel the process but the primary use is to be saved so the renderer doesn't get collected.
+        The second argument is one end of a pipe that is used to update the render engine. this pipe should be passed new lidar maps periodically so they can be rendered. 
         WARNING all code that deals with the pipe should be surrounded by a try except block as the pipe will start to throw errors whenever the user closes the render machine.
     """
     returnPipe, machinePipe = Pipe(duplex=True)
     returnPipe=renderPipeCap(returnPipe)
     machinePipe=renderPipeCap(machinePipe)
-    if type==0:
-        process= Process(target=polarRenderMachine, args=(machinePipe,))
 
-    else:
-        raise ValueError("tried to create a render machine with type value ", type, ". This type does not exist")
+    process= Process(target=polarRenderMachine, args=(machinePipe,))
+
     process.start()
 
 
