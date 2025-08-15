@@ -3,10 +3,15 @@ import sys
 
 from lidarLib.LidarConfigs import lidarConfigs
 
-def stop(port:str):
-    config = lidarConfigs.configsFromJson(port) # type: ignore
+def stop(configPath:str):
+    """
+        <h2>Utility function to stop a lidar.</h2>
+        configPath should be the path to a lidar config file. \n
+        This function boots the lidar in a specific stop mode and so is much more robust than simply starting a lidar and then stopping it. 
+    """
+    config = lidarConfigs.configsFromJson(configPath) # type: ignore
     config.isStop=True
-    lidar = Lidar(lidarConfigs.configsFromJson(port)) # type: ignore
+    lidar = Lidar(lidarConfigs.configsFromJson(configPath)) # type: ignore
 
 
 
