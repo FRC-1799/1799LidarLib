@@ -213,16 +213,16 @@ class LidarScanMode:
 class LidarMeasurementHQ:
     
     def __init__(self, syncBit:int, angleQ6:int, distQ2:int):
-        self.start_flag = syncBit | ((not syncBit) << 1)
+        self.startFlag = syncBit | ((not syncBit) << 1)
         self.quality = (0x2f << 2) if distQ2 else 0
-        self.angle_z_q14:float = (angleQ6 << 8) // 90
-        self.dist_mm_q2:float = distQ2
+        self.angleZQ14:float = (angleQ6 << 8) // 90
+        self.distMmQ2:float = distQ2
 
     def getAngle(self):
-        return self.angle_z_q14 * 90.0 / 16384.0
+        return self.angleZQ14 * 90.0 / 16384.0
     
     def getDistance(self):
-        return self.dist_mm_q2 / 4.0
+        return self.distMmQ2 / 4.0
 
 
 

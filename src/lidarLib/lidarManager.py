@@ -11,6 +11,7 @@ import time
 
 
 def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
+    """<h2>Function to manage a piped lidar</h2>"""
     print("Manager start")
 
     setproctitle.setproctitle(lidarConfig.name + "manager")
@@ -111,9 +112,8 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
 
 def makePipedLidar(lidarConfig:lidarConfigs)-> "lidarPipeline":
     """
-        Creates a separate posses that handles all rendering and can be updated via a pipe(connection)
-        returns a tuple with the first argument being the process, this can be use cancel the process but the primary use is to be saved so the renderer doesn't get collected
-        the second argument is one end of a pipe that is used to update the render engine. this pipe should be passed new lidar maps periodically so they can be rendered. 
+        <h2>Creates a separate process to handle a lidar unit that can be interacted with via a lidar pipeline </h2>
+        returns a lidar pipeline that interacts with the other side of the pipe. 
     """
 
 

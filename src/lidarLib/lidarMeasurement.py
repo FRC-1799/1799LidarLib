@@ -1,32 +1,37 @@
 import time
+
 from lidarLib.util import polarToX, polarToY, polarToCart
+from lidarLib.lidarProtocol import LidarMeasurementHQ
 
 class lidarMeasurement:
-    """Class to handle a single lidar measurement, coordinates are normally stored in polar but may be gotten in cartesian form using the getX, getY, and getCat methods"""
-    def __init__(self, raw_bytes:bytes=None, measurement_hq=None): # type: ignore
+    """
+        <h2>Class to handle a single lidar measurement.</h2>
+        Coordinates can be gotten in polar with the get distance and get angle methods or in cartesian form using the getX, getY, and getCart methods.
         """
-            initializes a lidar measurement using a package from the lidar
-            while measurement_hq objects are accepted by this function the class is currently deprecated and should not be used
-        """
+    def __init__(self, rawBytes:bytes=None, measurementHQ:LidarMeasurementHQ=None): # type: ignore
+        """<h2>Initializes a lidar measurement using a package from the lidar or a measurementHQ from a lidar.</h2>"""
         self.timeStamp=time.time()
 
-        if raw_bytes is not None: # type: ignore
-            self.start_flag = bool(raw_bytes[0] & 0x1)
-            self.quality:int = raw_bytes[0] >> 2
-            self.angle:float = ((raw_bytes[1] >> 1) + (raw_bytes[2] << 7)) / 64.0
-            self.distance:float = ((raw_bytes[3] + (raw_bytes[4] << 8)) / 4.0)/1000
+        if rawBytes is not None: # type: ignore
+            self.start_flag = bool(rawBytes[0] & 0x1)
+            self.quality:int = rawBytes[0] >> 2
+            self.angle:float = ((rawBytes[1] >> 1) + (rawBytes[2] << 7)) / 64.0
+            self.distance:float = ((rawBytes[3] + (rawBytes[4] << 8)) / 4.0)/1000
             
-        elif measurement_hq is not None:
-            self.start_flag=True if measurement_hq.start_flag==0x1 else False
-            self.quality=measurement_hq.quality
-            self.angle = ((measurement_hq.angle_z_q14*90)>>8)/64.0
-            self.distance= ((measurement_hq.dist_mm_q2)/4.0)/1000
+        elif measurementHQ is not None: # type: ignore
+            self.start_flag=True if measurementHQ.startFlag==0x1 else False
+            self.quality=measurementHQ.quality
+            self.angle = ((measurementHQ.angleZQ14*90)>>8)/64.0
+            self.distance= ((measurementHQ.distMmQ2)/4.0)/1000
 
     @classmethod
-    def default(cls, start_flag:bool, quality:int, angle:float, distance:float, isInMM:bool=True)->"lidarMeasurement":
-        """initializes a lidarMeasurement using the values specified. this method is only intended for debugging purposes. For creating measurements from a lidar use the standard constructor"""
+    def default(cls, startFlag:bool, quality:int, angle:float, distance:float, isInMM:bool=True)->"lidarMeasurement":
+        """
+            <h2>Initializes a lidarMeasurement using the values specified.</h2> 
+            This method is only intended for debugging purposes. For creating measurements from a real lidar use the standard constructor.
+        """
         new = cls()
-        new.start_flag=start_flag
+        new.start_flag=startFlag
         new.quality=quality
         new.angle=angle
         if (isInMM):
@@ -48,21 +53,21 @@ class lidarMeasurement:
         return str(data) # type: ignore
 
     def getAngle(self)->float:
-        """returns the measurements angle as a float"""
+        """<h2>Returns the measurements angle(or omega) as a float</h2>"""
         return self.angle
 
     def getDistance(self)->float:
-        """returns the measurements distance as a float"""
+        """<h2>Returns the measurements distance(or r) as a float</h2>"""
         return self.distance
 
     def getX(self)->float:
-        """returns the X of the measurement. This value is not directly stored and is instead calculated whenever the function is called"""
+        """<h2>Returns the X of the measurement.</h2>"""
         return polarToX(self.distance, self.angle)
 
     def getY(self)->float:
-        """returns the Y of the measurement. This value is not directly stored and is instead calculated whenever the function is called"""
+        """<h2>Returns the Y of the measurement.</h2>"""
         return polarToY(self.distance, self.angle)
     
     def getCart(self)->tuple[float, float]:
-        """returns the x and y of the measurement as a tuple. This value is not directly stored and is instead calculated whenever the function is called """
+        """<h2>Returns the x and y of the measurement as a tuple.</h2>"""
         return polarToCart(self.distance, self.angle)
