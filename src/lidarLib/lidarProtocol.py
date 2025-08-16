@@ -89,7 +89,7 @@ class LidarProtocolError(Exception):
 
 
 class LidarCommand:
-    """class to encapsulate a command sent to the lidar"""
+    """<h2>Class to encapsulate a command sent to the lidar.</h2>"""
     def __init__(self, cmd:bytes, payload:bytes=None): # type: ignore
         """Creates a rplidar command of type cmd. payload will be sent if set for commands that require extra information """
         self.cmd = cmd
@@ -102,17 +102,17 @@ class LidarCommand:
             self.rawBytes += struct.pack('B', self.getChecksum(self.rawBytes))
 
     def getChecksum(self, data:bytes):
-        """returns the checksum of the packet entered"""
+        """<h2>Returns the checksum of the packet entered.</h2>"""
         checkSum = 0
         for value in data: checkSum ^= value
         return checkSum
 
 
 class LidarResponse:
-    """Class to define scan metadata information returned by the lidar"""
+    """<h2>Class to define scan metadata information returned by the lidar"""
     
     def __init__(self, rawBytes:bytes):
-        """creates a rplidarResponse from the raw bytes returned by the lidar"""
+        """<h2>Creates a rplidarResponse from the raw bytes returned by the lidar.</h2>"""
         self.syncByte1 = rawBytes[0]
         self.syncByte2 = rawBytes[1]
         sizeQ30LengthType = struct.unpack("<L", rawBytes[2:6])[0]
@@ -136,9 +136,9 @@ class LidarResponse:
 
 
 class LidarDeviceInfo:
-    """Class to handle and store device information given by the lidar"""
+    """<h2>Class to handle and store device information given by the lidar.</h2>"""
     def __init__(self, rawBytes:bytes):
-        """creates device info object from the raw bytes returned by the lidar"""
+        """<h2>Creates device info object from the raw bytes returned by the lidar.</h2>"""
         self.model = rawBytes[0]
         self.firmwareMinor = rawBytes[1]
         self.firmwareMajor = rawBytes[2]
@@ -158,24 +158,24 @@ class LidarDeviceInfo:
 
 
 class LidarHealth:
-    """class to handle and store health information given by the lidar"""
+    """<h2>Class to handle and store health information given by the lidar.</h2>"""
     def __init__(self, rawBytes:bytes):
-        """creates a lidar health object from the raw byte package returned by the lidar"""
+        """<h2>Creates a lidar health object from the raw byte package returned by the lidar.</h2>"""
         self.status = rawBytes[0]
-        self.error_code = (rawBytes[1] << 8) + rawBytes[2]
+        self.errorCode = (rawBytes[1] << 8) + rawBytes[2]
 
     def __str__(self):
         data = {
             "status" : self.status,
-            "error_code" : self.error_code
+            "errorCode" : self.errorCode
         }
         return str(data)
 
 
 class LidarSampleRate:
-    """Class to handle and store sampleRate information given by the lidar"""
+    """<h2>Class to handle and store sampleRate information given by the lidar.</h2>"""
     def __init__(self, rawBytes:bytes):
-        """creates a lidar sampleRate object from the raw byte package returned by the lidar"""
+        """<h2>Creates a lidar sampleRate object from the raw byte package returned by the lidar.</h2>"""
         self.typeStandard = rawBytes[0] + (rawBytes[1] << 8)
         self.typeExpress = rawBytes[2] + (rawBytes[3] << 8)
     
@@ -188,9 +188,9 @@ class LidarSampleRate:
 
 
 class LidarScanMode:
-    """Class to handle and store a scan mode given by the lidar"""
+    """<h2>Class to handle and store a scan mode given by the lidar.</h2>"""
     def __init__(self, dataName:bytes, dataMaxDistance:bytes, dataUsPerSample:bytes, dataAnsType:bytes):
-        """Creates a scan mode using the byte packs returned by the lidar"""
+        """<h2>Creates a scan mode using the byte packs returned by the lidar.</h2>"""
         self.usPerSample = struct.unpack("<I", dataUsPerSample[4:8])[0]
         self.maxDistance = struct.unpack("<I", dataMaxDistance[4:8])[0]
         self.ansType = struct.unpack("<B", dataAnsType[4:5])[0]
@@ -209,8 +209,11 @@ class LidarScanMode:
 
 
 
-# @DeprecationWarning
 class LidarMeasurementHQ:
+    """
+        <h2>The data for a single measurement from a express mode lidar scan.</h2>
+        This data can be passed into the LidarMeasurement class to get a full lidar measurement.
+    """
     
     def __init__(self, syncBit:int, angleQ6:int, distQ2:int):
         self.startFlag = syncBit | ((not syncBit) << 1)
@@ -219,25 +222,30 @@ class LidarMeasurementHQ:
         self.distMmQ2:float = distQ2
 
     def getAngle(self):
+        """<h2>Returns the angle (or polar omega) of the reading</h2>"""
         return self.angleZQ14 * 90.0 / 16384.0
     
     def getDistance(self):
+        """<h2>Returns the distance (or polar r) of the reading.</h2>"""
         return self.distMmQ2 / 4.0
 
 
 
-# @DeprecationWarning
 class LidarCabin:
+    """
+        <h2>Holds the unique data for a single lidar measurement in an standard express scan.</h2> 
+        This can later be combined with a scan capsules global data to make a lidarMeasurementHQ.
+    """
+
     
     def __init__(self, rawBytes:bytes):
         self.distance1 = (rawBytes[0] >> 2) + (rawBytes[1] << 6)
         self.distance2 = (rawBytes[2] >> 2) + (rawBytes[3] << 6)
-        self.d_theta1 = (rawBytes[4] & 0x0F) + ((rawBytes[0] & 0x03) << 4)
-        self.d_theta2 = (rawBytes[4] >> 4) + ((rawBytes[2] & 0x03) << 4)
+        self.theta1 = (rawBytes[4] & 0x0F) + ((rawBytes[0] & 0x03) << 4)
+        self.theta2 = (rawBytes[4] >> 4) + ((rawBytes[2] & 0x03) << 4)
 
-# @DeprecationWarning
 class LidarScanCapsule:
-    
+    """<h2>Contains a list of cabin scans given by type 0x82 express mode"""
     def __init__(self, rawBytes:bytes):
         self.syncByte1 = (rawBytes[0] >> 4) & 0xF
         self.syncByte2 = (rawBytes[1] >> 4) & 0xF
@@ -251,7 +259,7 @@ class LidarScanCapsule:
 
     @classmethod
     def _parseCapsule(cls, capsulePrev:"LidarScanCapsule", capsuleCurrent:"LidarScanCapsule")->list[LidarMeasurementHQ]:
-        
+        """<h2> Turns a capsule into a list of lidar measurement HQ objects.</h2>"""
         nodes:list[LidarMeasurementHQ] = []
         
         currentStartAngleQ8 = capsuleCurrent.startAngleQ6 << 2
@@ -273,8 +281,8 @@ class LidarScanCapsule:
             distQ2[0] = capsulePrev.cabins[pos].distance1 << 2
             distQ2[1] = capsulePrev.cabins[pos].distance2 << 2
             
-            angleOffset1Q3 = capsulePrev.cabins[pos].d_theta1
-            angleOffset2Q3 = capsulePrev.cabins[pos].d_theta2
+            angleOffset1Q3 = capsulePrev.cabins[pos].theta1
+            angleOffset2Q3 = capsulePrev.cabins[pos].theta2
             
             angleQ6[0] = ((currentAngleRawQ16 - (angleOffset1Q3<<13))>>10)
             syncBit[0] = 1 if ((currentAngleRawQ16 + angleIncQ16) % (360<<16)) < angleIncQ16 else 0
@@ -302,12 +310,17 @@ class LidarScanCapsule:
 
 # @DeprecationWarning
 class LidarDenseCabin:
-    
+
+    """
+        <h2>Holds the unique data for a single lidar measurement in an dense express scan.</h2> 
+        This can later be combined with a scan capsules global data to make a lidarMeasurementHQ.
+    """
     def __init__(self, rawBytes:bytes):
         self.distance = (rawBytes[0] << 8) + rawBytes[1]
 
 # @DeprecationWarning
 class LidarScanDenseCapsule:
+    """<h2>Contains a list of cabin scans given by type 0x85 express mode"""
 
     def __init__(self, rawBytes:bytes):
         self.syncByte1 = (rawBytes[0] >> 4) & 0xF
@@ -322,7 +335,8 @@ class LidarScanDenseCapsule:
 
     @classmethod
     def _parseCapsule(cls, capsulePrev:"LidarScanDenseCapsule", capsuleCurrent:"LidarScanDenseCapsule"):
-        
+        """<h2> Turns a capsule into a list of lidar measurement HQ objects.</h2>"""
+
         nodes:list[LidarMeasurementHQ] = []
         
         currentStartAngleQ8 = capsuleCurrent.startAngleQ6 << 2
@@ -361,7 +375,10 @@ class LidarScanDenseCapsule:
 
 # @DeprecationWarning
 class LidarUltraCabin:
-    
+    """
+        <h2>Holds the unique data for a single lidar measurement in an ultra capsuled express scan.</h2> 
+        This can later be combined with a scan capsules global data to make a lidarMeasurementHQ.
+    """
     def __init__(self, rawBytes:bytes):
         self.major = ((int(rawBytes[1]) & 0xF) << 8) + int(rawBytes[0])
         self.predict1 = ((int(rawBytes[2]) & 0x3F) << 4) + ((int(rawBytes[1]) >> 4) & 0xF)
@@ -379,6 +396,7 @@ class LidarUltraCabin:
         return str(data)
 # @DeprecationWarning
 class LidarScanUltraCapsule:
+    """<h2>Contains a list of cabin scans given by type 0x84 express mode"""
 
     def __init__(self, rawBytes:bytes):
         self.syncByte1 = (rawBytes[0] >> 4) & 0xF
@@ -419,7 +437,8 @@ class LidarScanUltraCapsule:
 
     @classmethod
     def _parseCapsule(cls, capsulePrev:"LidarScanUltraCapsule", capsuleCurrent:"LidarScanUltraCapsule"):
-        
+        """<h2> Turns a capsule into a list of lidar measurement HQ objects.</h2>"""
+
         nodes:list[LidarMeasurementHQ] = []
         
         currentStartAngleQ8 = capsuleCurrent.startAngleQ6 << 2
